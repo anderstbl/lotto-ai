@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { getLatestPredictionRun, getPredictionsForRun, getDraws } from '@/lib/queries'
 import PredictionResults from '@/components/PredictionResults'
-import RunStatus from '@/components/RunStatus'
 import StatisticsPanel from '@/components/StatisticsPanel'
 
 export const dynamic = 'force-dynamic'
@@ -22,13 +21,16 @@ export default async function HomePage() {
           </svg>
           <span>Lotto<span className="accent">AI</span></span>
         </h1>
-        <p className="intro-copy">Ugens anbefaling · Beregninger og statistik</p>
+        <p className="intro-copy max-w-xl">
+          <strong className="font-medium text-[var(--text)]">10 Lotto-rækker hver uge.</strong>{' '}
+          Vi kombinerer statistiske beregninger på historiske trækninger med frekvensvægtning,
+          fordeling på talintervaller og tilfældig udvælgelse.
+        </p>
       </div>
       <Link href="/backtests" className="outline-link">Udforsk modellen <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 18 18 6M6 6h12v12" /></svg></Link>
     </section>
     {run ? <>
-      <RunStatus run={run} count={predictions.length} />
-      <PredictionResults predictions={predictions} />
+      <PredictionResults predictions={predictions} run={run} />
       <StatisticsPanel run={run} draws={draws} />
     </> : <section className="card empty-state"><span className="eyebrow accent">Ingen kørsel tilgængelig</span><h2>Afventer beregninger</h2><p>Der er ingen beregninger at vise lige nu. Prøv igen senere.</p></section>}
   </div>

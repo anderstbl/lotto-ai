@@ -119,7 +119,7 @@ LottoAI is for entertainment and exploration. Lottery draws are random; historic
 
 ## Interface conventions
 
-The calculation flow reports only stored facts: a recorded run, the number of saved rows, and whether a result is available. It does not report live generator progress. Loading UI describes fetching saved data. Method explanations appear once per group; the original explanation and rationale strings remain available in expandable notes, deduplicated within each group. Row totals and even/odd counts are calculated directly from each row. A shared responsible-play disclaimer appears in the footer.
+The featured row appears directly below the page title. A compact status line underneath reports the saved row count and run timestamp, with model version and run ID in expandable details. It does not report live generator progress. Loading UI describes fetching saved data. Method explanations appear once per group; the original explanation and rationale strings remain available in expandable notes, deduplicated within each group. Row totals and even/odd counts are calculated directly from each row. A shared responsible-play disclaimer appears in the footer.
 
 
 The expandable statistics panel explains 7/36 combinatorics and computes observed frequencies from the latest 52 available draw records, retaining valid 7/36 draws. This display sample is explicitly separate from the generator’s source dataset, documented in the stored run notes.

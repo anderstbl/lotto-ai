@@ -4,7 +4,7 @@ import Nav from '@/components/Nav'
 
 export const metadata: Metadata = {
   title: 'LottoAI — Ugens anbefaling, beregninger og statistik',
-  description: 'Statistik og talrækker til Lotto. Udforsk statistisk genererede talrækker, historiske data og beregningsmetoder.',
+  description: '10 Lotto-rækker hver uge med statistiske metoder: beregninger på historiske trækninger, frekvensvægtning, fordeling på talintervaller og tilfældig udvælgelse.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

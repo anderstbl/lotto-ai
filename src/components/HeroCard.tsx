@@ -1,5 +1,5 @@
 import type { Prediction } from '@/types'
-import { numberStats, strategyInfo } from '@/lib/presentation'
+import { numberStats, predictionLabel, strategyInfo } from '@/lib/presentation'
 import LottoBall from './LottoBall'
 
 export default function HeroCard({ prediction }: { prediction: Prediction }) {
@@ -11,7 +11,7 @@ export default function HeroCard({ prediction }: { prediction: Prediction }) {
           <span className="best-pick-badge">Bedste bud</span>
           <span className="rank-badge rank-featured">Rank #{prediction.rank}</span>
         </div>
-        <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">{prediction.label}</h2>
+        <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">{predictionLabel(prediction)}</h2>
         <p className="muted text-sm mt-2">{strategyInfo(prediction).label} · Første forslag i kørslens rækkefølge.</p>
         <div className="number-row hero-numbers" aria-label="Rækkens tal">
           {[...prediction.numbers].sort((a, b) => a - b).map(n => <LottoBall key={n} number={n} size="lg" />)}

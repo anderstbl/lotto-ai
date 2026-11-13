@@ -1,5 +1,5 @@
 import type { Prediction } from '@/types'
-import { numberStats } from '@/lib/presentation'
+import { numberStats, predictionLabel } from '@/lib/presentation'
 import LottoBall from './LottoBall'
 
 export default function PredictionCard({ prediction, index }: { prediction: Prediction; index: number }) {
@@ -7,7 +7,7 @@ export default function PredictionCard({ prediction, index }: { prediction: Pred
   return (
     <article className="card prediction-card reveal" style={{ animationDelay: `${Math.min(index, 6) * 45}ms` }}>
       <div className="prediction-heading">
-        <h3>{prediction.label}</h3>
+        <h3>{predictionLabel(prediction)}</h3>
         <span className="rank-badge">Rank #{prediction.rank}</span>
       </div>
       <div className="number-row" aria-label="Rækkens tal">
