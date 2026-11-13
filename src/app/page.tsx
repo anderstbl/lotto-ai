@@ -20,9 +20,9 @@ export default async function HomePage() {
             <path d="M21 27 37 11" stroke="#ffda68" strokeWidth="3" strokeLinecap="round" />
             <path d="m34 5 1 8 8 1-1-8-8-1Z" fill="#8edcff" />
           </svg>
-          <span>Lottomotoren</span>
+          <span>Lotto<span className="accent">AI</span></span>
         </h1>
-        <p className="intro-copy">Ugens talrækker · Beregninger og statistik</p>
+        <p className="intro-copy">Ugens anbefaling · Beregninger og statistik</p>
       </div>
       <Link href="/backtests" className="outline-link">Udforsk modellen <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 18 18 6M6 6h12v12" /></svg></Link>
     </section>

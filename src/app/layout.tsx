@@ -3,7 +3,7 @@ import './globals.css'
 import Nav from '@/components/Nav'
 
 export const metadata: Metadata = {
-  title: 'Lottomotoren — LottoAI',
+  title: 'LottoAI — Ugens anbefaling, beregninger og statistik',
   description: 'Statistik og talrækker til Lotto. Udforsk statistisk genererede talrækker, historiske data og beregningsmetoder.',
 }
 
