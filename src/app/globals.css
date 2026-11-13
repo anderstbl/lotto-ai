@@ -63,11 +63,6 @@ a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outli
 .hero-panel { position: relative; overflow: hidden; background: radial-gradient(ellipse at 95% 10%, #7c4cff22, transparent 55%), radial-gradient(ellipse at 0 100%, #247dc219, transparent 60%), #121b24; border: 1px solid #7b8cbb66; border-radius: 12px; padding: 30px 34px; box-shadow: 0 16px 70px #0002; }
 .hero-panel::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, #ff6b79, #ffc857, #60d9a8, #62b5ff, #b291ff, #ee83c7); }
 .lab-tag { color: var(--accent); font-size: 10px; background: #b8efcf0c; border: 1px solid #b8efcf25; border-radius: 4px; padding: 5px 8px; }
-.hero-orbit { position: absolute; width: 320px; height: 320px; right: -80px; top: 20px; opacity: .45; }
-.hero-orbit span { position: absolute; inset: 0; border: 1px solid #b8efcf1f; border-radius: 50%; }
-.hero-orbit span:nth-child(2) { inset: 35px; }
-.hero-orbit span:nth-child(3) { inset: 70px; }
-.hero-orbit::after { content: '+'; position: absolute; top: 152px; left: 150px; font: 20px ui-monospace, monospace; color: #b8efcf50; }
 .number-row { display: flex; flex-wrap: wrap; gap: 8px; }
 .hero-numbers { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); width: min(100%, 506px); gap: 12px; margin: 28px 0; }
 .hero-numbers .lotto-ball-lg { width: 100%; height: auto; aspect-ratio: 1; }
@@ -141,7 +136,6 @@ a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outli
   .hero-numbers { gap: 7px; }
   .lotto-ball-lg { width: 42px; height: 42px; font-size: 17px; }
   .hero-stats { gap: 26px; }
-  .hero-orbit { right: -185px; }
   .strategy-heading { gap: 9px; }
   .strategy-heading p { font-size: 11px; }
 }
@@ -150,3 +144,41 @@ a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outli
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* Supporting statistics stay secondary to the number suggestions. */
+.statistics-panel { scroll-margin-top: 110px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 0 26px; }
+.statistics-panel > summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 24px 0; cursor: pointer; list-style: none; }
+.statistics-panel > summary::-webkit-details-marker { display: none; }
+.statistics-panel > summary .eyebrow { color: var(--text-muted); }
+.statistics-panel h2 { font-weight: 500; font-size: 23px; letter-spacing: -.03em; margin-top: 7px; }
+.statistics-panel summary p { margin-top: 8px; font-size: 12px; line-height: 1.7; color: var(--text-muted); }
+.statistics-toggle { color: var(--accent); font: 22px ui-monospace, monospace; flex-shrink: 0; transition: transform .2s; }
+.statistics-panel[open] .statistics-toggle { transform: rotate(45deg); }
+.statistics-content { border-top: 1px solid var(--border); padding: 26px 0; }
+.theory-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+.theory-grid .eyebrow { color: var(--text-muted); }
+.statistics-formula { font: 20px ui-monospace, monospace; letter-spacing: -.04em; color: #c6d9f5; margin: 12px 0; }
+.theory-grid p:not(.statistics-formula), .statistics-caption { font-size: 12px; line-height: 1.85; color: var(--text-muted); }
+.frequency-section, .run-notes { border-top: 1px solid var(--border); margin-top: 26px; padding-top: 24px; }
+.statistics-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.statistics-heading h3 { font-size: 15px; font-weight: 500; }
+.statistics-heading > span, .statistics-heading > a { color: var(--text-muted); font-size: 10px; }
+.statistics-heading > a { text-decoration: underline; text-underline-offset: 4px; }
+.frequency-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px 26px; margin: 20px 0; }
+.frequency-cell { display: flex; align-items: center; gap: 8px; }
+.frequency-number { width: 18px; text-align: right; font-size: 10px; color: var(--text); }
+.frequency-track { flex: 1; height: 6px; border-radius: 2px; background: #8eb7ff0c; overflow: hidden; }
+.frequency-track > span { display: block; height: 100%; background: #8eb7ff; border-radius: 2px; }
+.frequency-count { width: 17px; color: var(--text-muted); font-size: 10px; text-align: right; }
+.formula-note { border-left: 2px solid #8eb7ff50; padding-left: 12px; }
+.run-notes dl { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 18px 0; }
+.run-notes dt { color: var(--text-muted); font-size: 10px; margin-bottom: 7px; }
+.run-notes dd { font-size: 11px; overflow-wrap: anywhere; }
+.run-notes-text { color: var(--text-muted); font-size: 12px; line-height: 1.9; }
+@media (max-width: 640px) {
+  .statistics-panel { padding: 0 18px; scroll-margin-top: 150px; }
+  .statistics-panel h2 { font-size: 21px; }
+  .theory-grid { grid-template-columns: 1fr; gap: 24px; }
+  .frequency-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px 16px; }
+  .run-notes dl { grid-template-columns: 1fr; }
+}

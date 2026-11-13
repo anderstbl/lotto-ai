@@ -1,12 +1,13 @@
 import Link from 'next/link'
-import { getLatestPredictionRun, getPredictionsForRun } from '@/lib/queries'
+import { getLatestPredictionRun, getPredictionsForRun, getDraws } from '@/lib/queries'
 import PredictionResults from '@/components/PredictionResults'
 import RunStatus from '@/components/RunStatus'
+import StatisticsPanel from '@/components/StatisticsPanel'
 
 export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
-  const run = await getLatestPredictionRun()
+  const [run, draws] = await Promise.all([getLatestPredictionRun(), getDraws(52)])
   const predictions = run ? await getPredictionsForRun(run.id) : []
   return <div className="space-y-9">
     <section className="intro">
@@ -19,16 +20,16 @@ export default async function HomePage() {
             <path d="M21 27 37 11" stroke="#ffda68" strokeWidth="3" strokeLinecap="round" />
             <path d="m34 5 1 8 8 1-1-8-8-1Z" fill="#8edcff" />
           </svg>
-          <span>Ugens Lotto-anbefaling</span>
+          <span>Lottomotoren</span>
         </h1>
-        <p className="intro-copy">Bedste bud og alternative rækker fra seneste beregning.</p>
+        <p className="intro-copy">Ugens talrækker · Beregninger og statistik</p>
       </div>
       <Link href="/backtests" className="outline-link">Udforsk modellen <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 18 18 6M6 6h12v12" /></svg></Link>
     </section>
     {run ? <>
       <RunStatus run={run} count={predictions.length} />
       <PredictionResults predictions={predictions} />
-      {run.notes && <details className="method-details"><summary>Datagrundlag & kørselsnoter <span aria-hidden="true">＋</span></summary><p className="muted text-sm leading-relaxed pt-4">{run.notes}</p></details>}
-    </> : <section className="card empty-state"><span className="eyebrow accent">Ingen kørsel tilgængelig</span><h2>Laboratoriet afventer data</h2><p>Der er ingen beregninger at vise lige nu. Prøv igen senere.</p></section>}
+      <StatisticsPanel run={run} draws={draws} />
+    </> : <section className="card empty-state"><span className="eyebrow accent">Ingen kørsel tilgængelig</span><h2>Afventer beregninger</h2><p>Der er ingen beregninger at vise lige nu. Prøv igen senere.</p></section>}
   </div>
 }

@@ -6,7 +6,6 @@ export default function HeroCard({ prediction }: { prediction: Prediction }) {
   const stats = numberStats(prediction.numbers)
   return (
     <article className="hero-panel reveal">
-      <div className="hero-orbit" aria-hidden="true"><span /><span /><span /></div>
       <div className="relative">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <span className="best-pick-badge">Bedste bud</span>
