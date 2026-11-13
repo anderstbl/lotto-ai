@@ -1,5 +1,6 @@
 import { getSupabase } from './supabase'
-import type { Draw, PredictionRun, Prediction, Backtest } from '@/types'
+import { isCompleteDistribution } from './distribution'
+import type { Draw, PredictionRun, Prediction, Backtest, PredictionRunAnalysis, PredictionNumberStatistic, RunDistribution } from '@/types'
 
 function toNumberArray(value: unknown): number[] {
   if (Array.isArray(value)) return value.map(Number)
@@ -106,4 +107,23 @@ export function computeNumberFrequency(draws: Draw[]): Map<number, number> {
     }
   }
   return freq
+}
+
+export async function getDistributionForRun(runId: string): Promise<RunDistribution> {
+  const [analysisResult, statisticsResult] = await Promise.all([
+    getSupabase().from('prediction_run_analyses').select('*').eq('prediction_run_id', runId).maybeSingle(),
+    getSupabase().from('prediction_number_statistics').select('*').eq('prediction_run_id', runId).order('number'),
+  ])
+  if (analysisResult.error || statisticsResult.error) {
+    console.error('getDistributionForRun:', analysisResult.error?.message ?? statisticsResult.error?.message)
+    return { status: 'unavailable' }
+  }
+  if (!analysisResult.data) return { status: 'missing' }
+  const analysis = analysisResult.data as PredictionRunAnalysis
+  const statistics = (statisticsResult.data ?? []) as PredictionNumberStatistic[]
+  if (!isCompleteDistribution(runId, analysis, statistics)) {
+    console.error('getDistributionForRun: incomplete or inconsistent snapshot for', runId)
+    return { status: 'invalid' }
+  }
+  return { status: 'ready', analysis, statistics }
 }

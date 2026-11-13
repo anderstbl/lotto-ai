@@ -1,13 +1,15 @@
-import Link from 'next/link'
-import { getLatestPredictionRun, getPredictionsForRun, getDraws } from '@/lib/queries'
+import AnalysisLink from '@/components/AnalysisLink'
+import { getLatestPredictionRun, getPredictionsForRun, getDistributionForRun } from '@/lib/queries'
 import PredictionResults from '@/components/PredictionResults'
 import StatisticsPanel from '@/components/StatisticsPanel'
 
 export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
-  const [run, draws] = await Promise.all([getLatestPredictionRun(), getDraws(52)])
-  const predictions = run ? await getPredictionsForRun(run.id) : []
+  const run = await getLatestPredictionRun()
+  const [predictions, distribution] = run
+    ? await Promise.all([getPredictionsForRun(run.id), getDistributionForRun(run.id)])
+    : [[], { status: 'missing' } as const]
   return <div className="space-y-9">
     <section className="intro">
       <div>
@@ -27,11 +29,11 @@ export default async function HomePage() {
           fordeling på talintervaller og tilfældig udvælgelse.
         </p>
       </div>
-      <Link href="/backtests" className="outline-link">Udforsk modellen <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 18 18 6M6 6h12v12" /></svg></Link>
+      {run && <AnalysisLink />}
     </section>
     {run ? <>
       <PredictionResults predictions={predictions} run={run} />
-      <StatisticsPanel run={run} draws={draws} />
+      <StatisticsPanel run={run} distribution={distribution} />
     </> : <section className="card empty-state"><span className="eyebrow accent">Ingen kørsel tilgængelig</span><h2>Afventer beregninger</h2><p>Der er ingen beregninger at vise lige nu. Prøv igen senere.</p></section>}
   </div>
 }

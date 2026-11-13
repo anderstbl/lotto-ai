@@ -3,6 +3,7 @@ import { strategyInfo } from '@/lib/presentation'
 import HeroCard from './HeroCard'
 import RunStatus from './RunStatus'
 import PredictionCard from './PredictionCard'
+import SelectionMethod from './SelectionMethod'
 
 export default function PredictionResults({ predictions, run }: { predictions: Prediction[]; run: PredictionRun }) {
   const groups = new Map<string, Prediction[]>()
@@ -23,6 +24,7 @@ export default function PredictionResults({ predictions, run }: { predictions: P
           const info = strategyInfo(rows[0])
           return <section key={key} className="strategy-group" aria-labelledby={`strategy-${index}`}>
             <div className="strategy-heading"><span className="strategy-index mono">{String(index + 1).padStart(2, '0')}</span><div><h3 id={`strategy-${index}`}>{info.label}</h3>{info.description && <p>{info.description}</p>}</div><span className="mono muted ml-auto shrink-0">{rows.length} stk.</span></div>
+            <SelectionMethod details={rows[0].selection_details} />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{rows.map((p, i) => <PredictionCard key={p.id} prediction={p} index={i} />)}</div>
           </section>
         })}

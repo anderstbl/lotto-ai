@@ -63,7 +63,7 @@ The following contract is based on `src/types/index.ts` and `src/lib/queries.ts`
 | Table | Expected fields |
 | --- | --- |
 | `prediction_runs` | `id`, `created_at`, `model_version`, `notes` |
-| `predictions` | `id`, `prediction_run_id`, `rank`, `label`, `play_priority`, `strategy_type`, `numbers`, `explanation`, `rationale` |
+| `predictions` | `id`, `prediction_run_id`, `rank`, `label`, `play_priority`, `strategy_type`, `numbers`, `explanation`, `rationale`, optional `selection_details` |
 | `draws` | `id`, `draw_date`, `numbers`, `bonus_numbers`, `created_at` |
 | `backtests` | `id`, `prediction_run_id`, `model_version`, `strategy_type`, `score`, `matches`, `notes`, `evaluated_at`, `created_at` |
 
@@ -82,6 +82,7 @@ The data pages render dynamically and query Supabase on each request. The fronte
 | `npm run dev` | Start the development server. |
 | `npm run lint` | Run ESLint. |
 | `npm run build` | Create a production build. |
+| `npm test` | Validate snapshot integrity and run isolation (Node.js 22.6+). |
 | `npm start` | Serve the production build after building. |
 
 For production, configure the same environment variables on your host before building and running the app. Use a hosting environment that supports a Next.js server, since these pages need database access at request time.
@@ -122,4 +123,8 @@ LottoAI is for entertainment and exploration. Lottery draws are random; historic
 The featured row appears directly below the page title. A compact status line underneath reports the saved row count and run timestamp, with model version and run ID in expandable details. It does not report live generator progress. Loading UI describes fetching saved data. Method explanations appear once per group; the original explanation and rationale strings remain available in expandable notes, deduplicated within each group. Row totals and even/odd counts are calculated directly from each row. A shared responsible-play disclaimer appears in the footer.
 
 
-The expandable statistics panel explains 7/36 combinatorics and computes observed frequencies from the latest 52 available draw records, retaining valid 7/36 draws. This display sample is explicitly separate from the generator’s source dataset, documented in the stored run notes.
+The expandable distribution panel reads immutable snapshots from `prediction_run_analyses` (one row per run) and `prediction_number_statistics` (36 rows per run). It displays the saved observed and expected frequencies, deviations, standardized deviations, reference intervals, source, date range, cutoff, exclusions, backtest status, seed and generation parameters. Exact field types are defined in `src/types/index.ts`. Both tables need anonymous SELECT access with RLS configured for the published data.
+
+Both the homepage and historical run pages fetch the snapshot by the displayed run ID. Incomplete or inconsistent snapshots are withheld with an explicit message; older runs without snapshots remain readable. Query failures have a separate unavailable message. The panel never fills missing analysis with newer draws or a live 52-draw sample. The draw-history page continues to use its own latest-52 sample.
+
+The reader checks the 7/36 game format, all 36 unique numbers, count totals, expected values, derived deviations, consistent intervals, run identity and chronological data boundaries. These are consistency checks, not an independent recomputation of the stored interval quantiles. Individual reference intervals are descriptive and are not a multiple-comparison-adjusted significance test or a forecast. Stored `selection_details` exposes the actual sampler, weights, smoothing and interval allocation under each strategy’s expandable calculation principle.
