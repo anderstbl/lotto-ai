@@ -1,101 +1,34 @@
+import Link from 'next/link'
 import { getLatestPredictionRun, getPredictionsForRun } from '@/lib/queries'
-import HeroCard from '@/components/HeroCard'
-import PredictionCard from '@/components/PredictionCard'
-import type { Prediction } from '@/types'
+import PredictionResults from '@/components/PredictionResults'
+import RunStatus from '@/components/RunStatus'
 
 export const dynamic = 'force-dynamic'
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('da-DK', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
-}
-
 export default async function HomePage() {
   const run = await getLatestPredictionRun()
-
-  if (!run) {
-    return (
-      <div className="text-center py-24">
-        <div className="text-5xl mb-4">🎱</div>
-        <h1 className="text-2xl font-bold mb-2">Ingen rækker endnu</h1>
-        <p style={{ color: 'var(--text-muted)' }} className="text-sm">
-          Backend har ikke genereret nogle rækker endnu. Prøv igen snart.
-        </p>
-      </div>
-    )
-  }
-
-  const predictions: Prediction[] = await getPredictionsForRun(run.id)
-  const hero = predictions[0] ?? null
-  const rest = predictions.slice(1)
-
-  return (
-    <div className="flex flex-col gap-8">
-      {/* Header */}
+  const predictions = run ? await getPredictionsForRun(run.id) : []
+  return <div className="space-y-9">
+    <section className="intro">
       <div>
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-2xl">🎯</span>
-          <h1 className="text-xl font-black tracking-tight">Ugens Lotto Rækker</h1>
-        </div>
-        <p style={{ color: 'var(--text-muted)' }} className="text-sm">
-          Genereret {formatDate(run.created_at)}
-          {run.model_version && (
-            <span className="ml-2 text-xs opacity-60">· {run.model_version}</span>
-          )}
-        </p>
-        {run.notes && (
-          <p
-            className="mt-2 text-sm rounded-lg px-3 py-2 inline-block"
-            style={{ background: '#1e1e2a', color: '#9090b0', border: '1px solid #2a2a3a' }}
-          >
-            {run.notes}
-          </p>
-        )}
+        <h1 className="recommendation-title">
+          <svg className="target-icon" aria-hidden="true" width="44" height="44" viewBox="0 0 48 48" fill="none">
+            <circle cx="21" cy="27" r="18" fill="#ff667b" />
+            <circle cx="21" cy="27" r="12" fill="#fff1e8" />
+            <circle cx="21" cy="27" r="6" fill="#ff667b" />
+            <path d="M21 27 37 11" stroke="#ffda68" strokeWidth="3" strokeLinecap="round" />
+            <path d="m34 5 1 8 8 1-1-8-8-1Z" fill="#8edcff" />
+          </svg>
+          <span>Ugens Lotto-anbefaling</span>
+        </h1>
+        <p className="intro-copy">Bedste bud og alternative rækker fra seneste beregning.</p>
       </div>
-
-      {/* Hero card */}
-      {hero ? (
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: 'var(--gold)' }}>
-            Primær anbefaling
-          </p>
-          <HeroCard prediction={hero} />
-        </div>
-      ) : (
-        <p style={{ color: 'var(--text-muted)' }}>Ingen rækker fundet for dette run.</p>
-      )}
-
-      {/* Rest of predictions */}
-      {rest.length > 0 && (
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
-            Alternative rækker ({rest.length})
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {rest.map((p, i) => (
-              <PredictionCard key={p.id} prediction={p} index={i} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Footer note */}
-      <div
-        className="rounded-xl p-4 text-xs"
-        style={{
-          background: '#16161f',
-          border: '1px solid #2a2a3a',
-          color: 'var(--text-muted)',
-        }}
-      >
-        <span className="font-semibold" style={{ color: '#888899' }}>Husk:</span>{' '}
-        Lotto er et tilfældighedsspil. AI kan finde mønstre, men ikke fremtiden. Spil ansvarligt — og spil kun for sjov.
-        Odds for jackpot: ca. 1 : 2.098.800. Men hey, nogen vinder jo! 🤞
-      </div>
-    </div>
-  )
+      <Link href="/backtests" className="outline-link">Udforsk modellen <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 18 18 6M6 6h12v12" /></svg></Link>
+    </section>
+    {run ? <>
+      <RunStatus run={run} count={predictions.length} />
+      <PredictionResults predictions={predictions} />
+      {run.notes && <details className="method-details"><summary>Datagrundlag & kørselsnoter <span aria-hidden="true">＋</span></summary><p className="muted text-sm leading-relaxed pt-4">{run.notes}</p></details>}
+    </> : <section className="card empty-state"><span className="eyebrow accent">Ingen kørsel tilgængelig</span><h2>Laboratoriet afventer data</h2><p>Der er ingen beregninger at vise lige nu. Prøv igen senere.</p></section>}
+  </div>
 }

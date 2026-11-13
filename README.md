@@ -2,15 +2,15 @@
 
 **A Danish Lotto dashboard for AI-generated number suggestions, draw history, and model insights.**
 
-LottoAI brings the latest predictions and their explanations into a responsive, dark-themed interface with purple and gold accents. Explore alternative strategies, revisit earlier prediction runs, and compare historical backtest results—all with Danish labels and date formatting.
+LottoAI brings the latest predictions and their explanations into a responsive, dark-themed interface with colorful number balls, a laboratory-inspired visual theme, and stored-run status. Explore alternative strategies, revisit earlier prediction runs, and compare historical backtest results—all with Danish labels and date formatting.
 
 ## What you can explore
 
 | Page | Route | What it shows |
 | --- | --- | --- |
-| This week's picks | `/` | The latest prediction run, its top-ranked suggestion, alternative rows, and strategy explanations. |
+| This week's picks | `/` | The latest stored run, a featured row, method groups, and row statistics. |
 | Prediction history | `/history` | The 30 most recent prediction runs, including model versions and notes. |
-| Run details | `/history/[id]` | The ranked predictions from a specific run. |
+| Run details | `/history/[id]` | The rows from a specific run, grouped by method. |
 | Draw history | `/draws` | The latest 52 draws, bonus numbers, and number-frequency summaries. |
 | Model insights | `/backtests` | The latest 50 backtests, scores, match counts, and summaries by strategy. |
 
@@ -70,7 +70,7 @@ The following contract is based on `src/types/index.ts` and `src/lib/queries.ts`
 - IDs are represented as strings, dates as date/timestamp strings, and number lists as numeric arrays in the application types.
 - `predictions.prediction_run_id` links a prediction to its run. `backtests.prediction_run_id` may also reference a run, but can be null.
 - Nullable metadata and evaluation fields are defined in `src/types/index.ts`.
-- Prediction rows are ordered by ascending `rank`; the first row is highlighted as the primary suggestion. Runs and backtests are ordered by `created_at`, and draws by `draw_date`, newest first.
+- Prediction rows are ordered by ascending `rank`; the first row is featured for inspection. Rank indicates display order, not win probability. Runs and backtests are ordered by `created_at`, and draws by `draw_date`, newest first.
 - The query layer also normalizes number lists stored as JSON-array strings or comma-separated strings.
 
 The data pages render dynamically and query Supabase on each request. The frontend displays stored predictions and scores; it computes draw frequencies and strategy summaries for the records retrieved on the relevant page.
@@ -116,3 +116,7 @@ src/
 ## A note on predictions
 
 LottoAI is for entertainment and exploration. Lottery draws are random; historical frequencies, AI-generated suggestions, and backtest results do not guarantee future wins. Play responsibly.
+
+## Interface conventions
+
+The calculation flow reports only stored facts: a recorded run, the number of saved rows, and whether a result is available. It does not report live generator progress. Loading UI describes fetching saved data. Method explanations appear once per group; the original explanation and rationale strings remain available in expandable notes, deduplicated within each group. Row totals and even/odd counts are calculated directly from each row. A shared responsible-play disclaimer appears in the footer.
