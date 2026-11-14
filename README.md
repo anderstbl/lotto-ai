@@ -70,7 +70,7 @@ The following contract is based on `src/types/index.ts` and `src/lib/queries.ts`
 - IDs are represented as strings, dates as date/timestamp strings, and number lists as numeric arrays in the application types.
 - `predictions.prediction_run_id` links a prediction to its run. `backtests.prediction_run_id` may also reference a run, but can be null.
 - Nullable metadata and evaluation fields are defined in `src/types/index.ts`.
-- Prediction rows are ordered by ascending `rank`; the first row is featured for inspection. Rank indicates display order, not win probability. Runs and backtests are ordered by `created_at`, and draws by `draw_date`, newest first.
+- Prediction rows are ordered by ascending `rank`; the first row is featured for inspection. For validated `distribution_profile_v1` runs, rank follows the saved distribution score. Older runs retain display order and are labeled as such; neither indicates win probability. Runs and backtests are ordered by `created_at`, and draws by `draw_date`, newest first.
 - The query layer also normalizes number lists stored as JSON-array strings or comma-separated strings.
 
 The data pages render dynamically and query Supabase on each request. The frontend displays stored predictions and scores; it computes draw frequencies and strategy summaries for the records retrieved on the relevant page.
@@ -128,3 +128,9 @@ The expandable distribution panel reads immutable snapshots from `prediction_run
 Both the homepage and historical run pages fetch the snapshot by the displayed run ID. Incomplete or inconsistent snapshots are withheld with an explicit message; older runs without snapshots remain readable. Query failures have a separate unavailable message. The panel never fills missing analysis with newer draws or a live 52-draw sample. The draw-history page continues to use its own latest-52 sample.
 
 The reader checks the 7/36 game format, all 36 unique numbers, count totals, expected values, derived deviations, consistent intervals, run identity and chronological data boundaries. These are consistency checks, not an independent recomputation of the stored interval quantiles. Individual reference intervals are descriptive and are not a multiple-comparison-adjusted significance test or a forecast. Stored `selection_details` exposes the actual sampler, weights, smoothing and interval allocation under each strategy’s expandable calculation principle.
+
+## Profile-based ranking
+
+New runs may store `distribution_score`, `profile_probability` and `score_details` on each prediction, plus `ranking_version`, `ranking_definition` and `ranking_parameters` on the run analysis. `distribution_profile_v1` scores the joint even-count, three interval counts and sum profile by `100 * profile_combination_count / max_profile_combination_count` over all 8,347,680 possible rows. This describes profile-category frequency, not the chance of a particular row winning.
+
+The frontend validates version, run identity, all ten unique rows and ranks, score formulas, profile values derived from the actual row, artifact identity, descending order, and the numeric lexicographic tie-breaker. It does not independently enumerate or verify the theoretical cache's counts. Validated runs display a global rank-ordered grid, scores out of 100, per-row score details and an explanation. Legacy runs have display numbers without scores or a “best pick” claim. Unavailable or inconsistent ranking data is not presented as a verified score.

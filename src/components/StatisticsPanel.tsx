@@ -86,10 +86,12 @@ export default function StatisticsPanel({ run, distribution }: { run: Prediction
             <summary>Reproducerbarhed og analyseparametre <span aria-hidden="true">＋</span></summary>
             <dl>
               <div><dt>Analyseversion</dt><dd className="mono">{snapshot.analysis.analysis_version}</dd></div>
+              {snapshot.analysis.ranking_version && <div><dt>Rangeringsversion</dt><dd className="mono">{snapshot.analysis.ranking_version}</dd></div>}
               <div><dt>Tilfældighedsseed</dt><dd className="mono">{String(snapshot.analysis.random_seed)}</dd></div>
               <div><dt>Intervalmetode</dt><dd className="mono">{reference?.interval_method}</dd></div>
               <div><dt>Datasættets hash</dt><dd className="mono">{snapshot.analysis.source_dataset_hash}</dd></div>
             </dl>
+            {snapshot.analysis.ranking_parameters && <><h4>Gemte rangeringsparametre</h4><p className="statistics-caption">{snapshot.analysis.ranking_definition}</p><pre>{JSON.stringify(snapshot.analysis.ranking_parameters, null, 2)}</pre></>}
             <h4>Gemte generatorparametre</h4><pre>{JSON.stringify(snapshot.analysis.generation_parameters, null, 2)}</pre>
             <h4>Datavalidering fra beregningsjobbet</h4><pre>{JSON.stringify(snapshot.analysis.validation_summary, null, 2)}</pre>
           </details>}

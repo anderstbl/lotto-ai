@@ -24,6 +24,9 @@ export interface Prediction {
   explanation: string | null
   rationale: string | null
   selection_details?: SelectionDetails | null
+  distribution_score?: number | null
+  profile_probability?: number | null
+  score_details?: ProfileScoreDetails | null
 }
 
 export interface Backtest {
@@ -66,6 +69,9 @@ export interface PredictionRunAnalysis {
   excluded_draw_count: number
   validation_summary: { [key: string]: JsonValue }
   backtest_status: string
+  ranking_version?: string | null
+  ranking_definition?: string | null
+  ranking_parameters?: { [key: string]: JsonValue } | null
   created_at: string
 }
 
@@ -87,3 +93,23 @@ export interface PredictionNumberStatistic {
 export type RunDistribution =
   | { status: 'ready'; analysis: PredictionRunAnalysis; statistics: PredictionNumberStatistic[] }
   | { status: 'missing' | 'unavailable' | 'invalid' }
+
+export interface ProfileScoreDetails {
+  profile: {
+    sum: number
+    even_count: number
+    band_1_12_count: number
+    band_13_24_count: number
+    band_25_36_count: number
+  }
+  ranking_version: string
+  generation_order: number
+  total_combinations: number
+  profile_combination_count: number
+  max_profile_combination_count: number
+  distribution_artifact_hash: string
+}
+
+export type RunRanking =
+  | { status: 'ranked'; predictions: Prediction[]; analysis: PredictionRunAnalysis }
+  | { status: 'legacy' | 'unavailable' | 'invalid' }

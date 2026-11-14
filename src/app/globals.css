@@ -223,3 +223,30 @@ a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outli
   .frequency-deviation { width: 30px; font-size: 8px; }
   .statistics-panel .frequency-grid { grid-template-columns: 1fr; }
 }
+
+.hero-stats { flex-wrap: wrap; }
+.featured-score { color: var(--gold); }
+.score-value { font-size: 24px; }
+.score-value em { font-size: 12px; font-style: normal; color: var(--text-muted); }
+.card-score-line { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; margin: -6px 0 18px; color: var(--text-muted); font-size: 10px; }
+.card-score-line strong { margin-left: 6px; font: 500 15px ui-monospace, monospace; color: #c4dfff; white-space: nowrap; }
+.card-score-line small { color: var(--text-muted); font-size: 10px; }
+.profile-score-details { margin-top: 16px; font-size: 11px; color: var(--text-muted); }
+.profile-score-details summary { display: inline-flex; align-items: center; gap: 12px; cursor: pointer; list-style: none; }
+.profile-score-details summary::-webkit-details-marker { display: none; }
+.profile-score-details summary > span { transition: transform .2s; }
+.profile-score-details[open] summary > span { transform: rotate(45deg); }
+.profile-score-details dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; border-top: 1px solid var(--border); padding-top: 16px; margin: 16px 0; }
+.profile-score-details dt { font-size: 10px; margin-bottom: 6px; line-height: 1.7; }
+.profile-score-details dd { color: var(--text); line-height: 1.7; }
+.profile-score-details p { line-height: 1.8; margin-top: 10px; }
+.ranking-explanation { padding-top: 0; border-top: 0; }
+.ranking-explanation > div { margin-top: 18px; padding: 18px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; }
+.ranking-explanation p { font-size: 12px; line-height: 1.9; margin-top: 12px; overflow-wrap: anywhere; }
+.ranking-explanation p:first-child { margin-top: 0; }
+.score-formula { color: #c4dfff; }
+.ranked-methods .selection-method { margin-left: 0; }
+@media (max-width: 640px) {
+  .hero-stats { gap: 24px; }
+  .profile-score-details dl { grid-template-columns: 1fr; }
+}

@@ -32,7 +32,7 @@ export default async function HomePage() {
       {run && <AnalysisLink />}
     </section>
     {run ? <>
-      <PredictionResults predictions={predictions} run={run} />
+      <PredictionResults predictions={predictions} run={run} distribution={distribution} />
       <StatisticsPanel run={run} distribution={distribution} />
     </> : <section className="card empty-state"><span className="eyebrow accent">Ingen kørsel tilgængelig</span><h2>Afventer beregninger</h2><p>Der er ingen beregninger at vise lige nu. Prøv igen senere.</p></section>}
   </div>
