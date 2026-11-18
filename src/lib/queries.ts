@@ -1,5 +1,5 @@
 import { getSupabase } from './supabase'
-import { previousWeekRange, rowRank } from './jackpot-search'
+import { isValidRow } from './lotto-simulator'
 import { isCompleteDistribution } from './distribution'
 import type { Draw, PredictionRun, Prediction, Backtest, PredictionRunAnalysis, PredictionNumberStatistic, RunDistribution } from '@/types'
 
@@ -129,25 +129,23 @@ export async function getDistributionForRun(runId: string): Promise<RunDistribut
   return { status: 'ready', analysis, statistics }
 }
 
-// Only use draws from the previous calendar week in Denmark. Never silently
-// substitute an older draw when imports are delayed.
-export async function getPreviousWeekDraw(): Promise<Draw | null> {
+// Use the latest imported draw up to today in Denmark.
+export async function getLatestWinningDraw(): Promise<Draw | null> {
   try {
-    const { start, end } = previousWeekRange()
+    const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Copenhagen' })
     const { data, error } = await getSupabase()
       .from('draws')
       .select('*')
-      .gte('draw_date', start)
-      .lt('draw_date', end)
+      .lte('draw_date', today)
       .order('draw_date', { ascending: false })
       .limit(1)
     if (error) throw error
     if (!data?.[0]) return null
     const draw = { ...data[0], numbers: toNumberArray(data[0].numbers), bonus_numbers: toNumberArray(data[0].bonus_numbers) }
-    rowRank(draw.numbers) // Reject malformed imports before offering a search.
+    if (!isValidRow(draw.numbers)) throw new Error('Ugyldige vindertal')
     return draw
   } catch (error) {
-    console.error('getPreviousWeekDraw:', error instanceof Error ? error.message : 'Kunne ikke hente trækningen')
+    console.error('getLatestWinningDraw:', error instanceof Error ? error.message : 'Kunne ikke hente trækningen')
     return null
   }
 }

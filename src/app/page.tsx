@@ -34,7 +34,7 @@ export default async function HomePage() {
     </section>
     <Link href="/simulator" className="card block p-5 hover:border-yellow-500 transition-colors">
       <p className="font-bold" style={{ color: 'var(--gold)' }}>🎲 Jagten på 7 rigtige →</p>
-      <p className="text-sm mt-2 muted">Prøv dine lykketal i simulatoren, eller kør lynjagten mod sidste uges vindertal.</p>
+      <p className="text-sm mt-2 muted">Prøv at ramme de seneste vindertal — én række ad gangen eller i fuld fart.</p>
     </Link>
     {run ? <>
       <PredictionResults predictions={predictions} run={run} distribution={distribution} />

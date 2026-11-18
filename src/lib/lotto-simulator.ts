@@ -1,7 +1,12 @@
 export const NUMBER_COUNT = 36
 export const ROW_SIZE = 7
 export const JACKPOT_ODDS = 8_347_680
-export const SESSION_LIMIT = 1_000_000
+export const ROW_PRICE = 10
+
+export function isValidRow(numbers: readonly number[]): boolean {
+  return numbers.length === ROW_SIZE && new Set(numbers).size === ROW_SIZE
+    && numbers.every(n => Number.isInteger(n) && n >= 1 && n <= NUMBER_COUNT)
+}
 
 // Buffer random values to keep accelerated simulations inexpensive. Rejection
 // sampling avoids modulo bias when choosing among the remaining balls.
@@ -51,7 +56,7 @@ export function simulateBatch(
 ): Simulation {
   const next = { ...previous, counts: [...previous.counts] }
   const chosen = new Set(selected)
-  const end = Math.min(previous.attempts + amount, SESSION_LIMIT)
+  const end = previous.attempts + amount
   while (next.attempts < end && next.counts[7] === 0) {
     const draw = drawNumbers(randomInt)
     const matches = draw.reduce((total, n) => total + Number(chosen.has(n)), 0)

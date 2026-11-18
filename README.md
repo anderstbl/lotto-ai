@@ -9,7 +9,7 @@ LottoAI brings the latest predictions and their explanations into a responsive, 
 | Page | Route | What it shows |
 | --- | --- | --- |
 | This week's picks | `/` | The latest stored run, a featured row, method groups, and row statistics. |
-| Lotto simulator | `/simulator` | Pick 7 of 36, simulate independent draws, and track fictional spending, matches, and weekly time equivalents. The original mode works without database access; the historical quick search loads last week’s draw. |
+| Lotto simulator | `/simulator` | Try random rows against the latest winning numbers, manually or automatically, and track matches and fictional spending at 10 DKK per row. |
 | Prediction history | `/history` | The 30 most recent prediction runs, including model versions and notes. |
 | Run details | `/history/[id]` | The rows from a specific run, grouped by method. |
 | Draw history | `/draws` | The latest 52 draws, bonus numbers, and number-frequency summaries. |
@@ -138,14 +138,8 @@ The frontend validates version, run identity, all ten unique rows and ranks, sco
 
 ## Simulator
 
-The simulator runs entirely in the browser using uniformly sampled draws without replacement (Web Crypto, rejection sampling, partial Fisher–Yates). Each attempt compares the same seven chosen numbers against a new independent draw. It pauses on jackpot or one million attempts; manual pause, reset, and three speed settings are available. The adjustable row price defaults to an explicitly labeled 5 DKK example, and spending excludes winnings. No purchases or stored results are involved.
+One game at `/simulator` always targets the latest imported winning row up to today in Denmark, with the draw date displayed. Every attempt generates seven uniformly sampled distinct numbers (Web Crypto, rejection sampling, partial Fisher–Yates). Try one row at a time or run at roughly 1, 1,000 or 10,000 rows per second, with shared counts, best row and a fictional receipt at a fixed 10 DKK per row. Pause, resume and reset are available; the game stops on the first jackpot with no one-million-attempt cap. Missing or invalid draw data disables play with an explicit message. No purchases or stored results are involved.
 
 Jackpot odds are 1 in 8,347,680 (`36 choose 7`). The cumulative chance is `1 - (1 - 1 / 8347680)^attempts`, not a promise of an eventual win. Bonus balls and prize payouts are excluded.
 
-Run the simulator math checks with `node --experimental-strip-types --test src/lib/lotto-simulator.test.mjs src/lib/jackpot-search.test.mjs` (Node 22.6+).
-
-### Historical quick search
-
-“Lynjagten” uses the most recent imported draw from the previous Monday–Sunday calendar week in `Europe/Copenhagen`, and shows its exact date. Missing database configuration, missing draws and invalid winning numbers leave the challenge unavailable while the original simulator remains usable. The draw loads in a streamed server component.
-
-A dedicated Web Worker samples uniform combination ranks (one rank per possible seven-number row), using unbiased Web Crypto random integers. This is equivalent to generating independent random rows and comparing all seven numbers, without allocating and sorting millions of arrays. It reports the precise attempt of the first match and elapsed time, has no one-million-attempt cap, and terminates on success, manual stop or navigation. Stopping shows the last reported attempt count as a lower bound; each new run starts at zero. The search never writes to the database.
+Run simulator checks with `node --experimental-strip-types --test src/lib/lotto-simulator.test.mjs` (Node 22.6+).

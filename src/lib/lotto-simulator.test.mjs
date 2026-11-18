@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
   createRandomInt, drawNumbers, emptySimulation, jackpotChance,
-  JACKPOT_ODDS, SESSION_LIMIT, simulateBatch,
+  JACKPOT_ODDS, ROW_PRICE, isValidRow, simulateBatch,
 } from './lotto-simulator.ts'
 
 test('odds match all combinations of seven numbers from 36', () => {
@@ -34,14 +34,37 @@ test('jackpot stops a batch immediately and leaves previous state unchanged', ()
   assert.equal(previous.counts[7], 0)
 })
 
-test('batch counts matches accurately and respects the session cap', () => {
+test('batch counts matches accurately and continues beyond a million attempts', () => {
   const selected = [1, 2, 3, 4, 5, 35, 36]
-  const previous = { ...emptySimulation(), attempts: SESSION_LIMIT - 2 }
+  const previous = { ...emptySimulation(), attempts: 999_998 }
   const next = simulateBatch(previous, selected, 100, () => 0)
-  assert.equal(next.attempts, SESSION_LIMIT)
-  assert.equal(next.counts[5], 2)
+  assert.equal(next.attempts, 1_000_098)
+  assert.equal(next.counts[5], 100)
   assert.equal(next.bestMatches, 5)
   assert.deepEqual(next.latest, [1, 2, 3, 4, 5, 6, 7])
   const full = simulateBatch(emptySimulation(), selected, 123, () => 0)
   assert.equal(full.counts.reduce((sum, value) => sum + value, 0), 123)
+})
+
+test('winning rows are validated and every attempt costs 10 kroner', () => {
+  assert.equal(ROW_PRICE, 10)
+  assert.equal(isValidRow([1, 2, 3, 4, 5, 6, 36]), true)
+  for (const invalid of [[1, 2], [1, 1, 2, 3, 4, 5, 6], [0, 2, 3, 4, 5, 6, 7], [1, 2, 3, 4, 5, 6, 37]]) {
+    assert.equal(isValidRow(invalid), false)
+  }
+})
+
+test('manual and automatic batches form one continuous game and stop at the winning row', () => {
+  const winning = [1, 2, 3, 4, 5, 6, 7]
+  let calls = 0
+  const randomInt = () => calls++ === 0 ? 7 : 0
+  const manual = simulateBatch(emptySimulation(), winning, 1, randomInt)
+  assert.equal(manual.attempts, 1)
+  assert.equal(manual.bestMatches, 6)
+  const automatic = simulateBatch(manual, winning, 500, randomInt)
+  assert.equal(automatic.attempts, 2)
+  assert.equal(automatic.counts[7], 1)
+  assert.equal(automatic.attempts * ROW_PRICE, 20)
+  assert.deepEqual(automatic.latest, winning)
+  assert.deepEqual(simulateBatch(automatic, winning, 500, randomInt), automatic)
 })
