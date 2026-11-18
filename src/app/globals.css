@@ -390,3 +390,31 @@ a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outli
 .sim-modal[data-motion="on"] .sim-machine-cage { animation: sim-machine-spin 3s linear infinite !important; }
 .sim-modal[data-motion="off"] .sim-machine-ball { animation: none; transform: rotate(var(--angle)) translateY(-72px) rotate(calc(-1 * var(--angle))); }
 .sim-modal[data-motion="off"] .sim-machine-cage { animation: none; }
+
+/* Manual play is one self-contained draw and result inside the dialog. */
+.sim-manual-dialog { width: min(880px, calc(100% - 24px)); overflow: hidden; }
+.sim-manual-layout { display: flex; flex-direction: column; max-height: 90dvh; }
+.sim-manual-header { padding: 1.25rem 1.5rem 1rem; border-bottom: 1px solid #57472d; }
+.sim-manual-header h2 { font-size: clamp(1.35rem, 4.5vw, 2rem); }
+.sim-reveal-progress { height: 4px; background: #41374a; border-radius: 10px; overflow: hidden; margin-top: 1rem; }
+.sim-reveal-progress span { display: block; height: 100%; background: linear-gradient(90deg, #8edcff, #ffd65c); transition: width .15s ease-out; }
+.sim-manual-body { overflow-y: auto; min-height: 0; padding: 1.25rem 1.5rem; }
+.sim-manual-target { gap: .45rem; }
+.sim-manual-rows .sim-empty { width: clamp(22px, 5.2vw, 28px); height: clamp(22px, 5.2vw, 28px); font-size: 10px; }
+.sim-manual-row-drawing .sim-empty { animation: sim-number-mix .22s ease-in-out infinite alternate; border-color: var(--gold); color: var(--gold); }
+.sim-manual-row-revealed { animation: sim-number-land .3s ease-out both; }
+.sim-manual-summary { background: #302615; border: 1px solid #897139; border-radius: .7rem; padding: 1rem; margin-top: 1rem; }
+.sim-manual-summary h3 { font-size: 1.1rem; font-weight: 700; }
+.sim-manual-summary h3 strong { color: var(--gold); }
+.sim-match-summary { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .8rem; }
+.sim-match-summary span { font-size: .75rem; padding: .3rem .6rem; border-radius: 100px; background: #ffffff0c; color: #d6cdbb; }
+.sim-manual-footer { flex-shrink: 0; display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; padding: 1rem 1.5rem; border-top: 1px solid #57472d; background: #17141f; }
+.sim-manual-cashout { grid-column: 1 / -1; }
+@keyframes sim-number-mix { from { transform: translateY(-3px) rotate(-12deg); } to { transform: translateY(3px) rotate(12deg); } }
+@keyframes sim-number-land { from { opacity: .3; transform: translateX(10px) scale(.97); } to { opacity: 1; transform: translateX(0) scale(1); } }
+@media (max-width: 400px) {
+  .sim-manual-header, .sim-manual-body { padding: 1rem .85rem; }
+  .sim-manual-footer { padding: .85rem; gap: .5rem; }
+  .sim-manual-target .lotto-ball { width: 28px; height: 28px; }
+  .sim-manual-rows .sim-empty { width: 20px; height: 20px; }
+}

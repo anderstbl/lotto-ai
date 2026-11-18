@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import LottoBall from '@/components/LottoBall'
 import SimulatorDialog from '@/components/SimulatorDialog'
+import ManualTicketDialog from '@/components/ManualTicketDialog'
 import {
   createRandomInt, emptySimulation, jackpotChance,
   type Simulation, JACKPOT_ODDS, ROW_PRICE, ROWS_PER_TICKET, TICKET_PRICE, WEEKLY_ROWS, simulateBatch,
@@ -18,7 +19,7 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
   const [running, setRunning] = useState(false)
   const [simulation, setSimulation] = useState(emptySimulation)
   const [cashedOut, setCashedOut] = useState(false)
-  const pendingTicket = useRef<Simulation | null>(null)
+  const [manualRound, setManualRound] = useState<Simulation | null>(null)
   const [rolling, setRolling] = useState(false)
   const [revealId, setRevealId] = useState(0)
   const random = useRef<ReturnType<typeof createRandomInt> | null>(null)
@@ -35,17 +36,28 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
     return random.current
   }
 
+  const finishManualAnimation = useCallback(() => setRolling(false), [])
+
   function tryTicket() {
-    if (pendingTicket.current !== null || active || !ready) return
-    pendingTicket.current = simulateBatch(simulation, selected, ROWS_PER_TICKET, getRandom())
+    if (rolling || active || cashedOut || selected.length !== 7) return
+    const result = simulateBatch({ ...simulation, milestone: null }, selected, ROWS_PER_TICKET, getRandom())
+    setSimulation(result)
+    setManualRound(result)
     setRolling(true)
+    setRevealId(id => id + 1)
   }
 
-  function revealTicket() {
-    if (pendingTicket.current) setSimulation(pendingTicket.current)
-    pendingTicket.current = null
-    setRevealId(id => id + 1)
+  function closeManualRound() {
     setRolling(false)
+    setManualRound(null)
+    setSimulation(previous => ({ ...previous, milestone: null }))
+  }
+
+  function cashOut() {
+    setRunning(false)
+    setRolling(false)
+    setManualRound(null)
+    setCashedOut(true)
   }
 
   function continuePlaying() {
@@ -70,9 +82,11 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
 
   return (
     <div className="simulator flex flex-col gap-6">
-      <SimulatorDialog rolling={rolling} prize={cashedOut ? null : simulation.milestone} tickets={tickets} cost={money.format(cost)} automatic={running}
-        onReveal={revealTicket} onContinue={continuePlaying}
-        onCashOut={() => { setRunning(false); setCashedOut(true) }}
+      {manualRound && <ManualTicketDialog key={manualRound.attempts} round={manualRound} winningNumbers={selected}
+        onComplete={finishManualAnimation} onRetry={tryTicket} onClose={closeManualRound} onCashOut={cashOut} />}
+      <SimulatorDialog prize={cashedOut || manualRound ? null : simulation.milestone} tickets={tickets} cost={money.format(cost)} automatic={running}
+        onContinue={continuePlaying}
+        onCashOut={cashOut}
         onDismiss={() => { setRunning(false); continuePlaying() }} />
       <section className="sim-intro">
         <p className="sim-eyebrow">ET LILLE EKSPERIMENT MED STORE ODDS</p>
