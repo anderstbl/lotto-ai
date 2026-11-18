@@ -1,6 +1,7 @@
 import { getLatestPredictionRun, getPredictionsForRun } from '@/lib/queries'
 import HeroCard from '@/components/HeroCard'
 import PredictionCard from '@/components/PredictionCard'
+import Link from 'next/link'
 import type { Prediction } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -17,6 +18,13 @@ function formatDate(dateStr: string) {
 export default async function HomePage() {
   const run = await getLatestPredictionRun()
 
+  const simulatorLink = (
+    <Link href="/simulator" className="card block p-5 text-left hover:border-yellow-500 transition-colors">
+      <p className="font-bold" style={{ color: 'var(--gold)' }}>🎲 Jagten på 7 rigtige →</p>
+      <p className="text-sm mt-2" style={{ color: 'var(--text-muted)' }}>Prøv dine lykketal i simulatoren, og se hvor stor den fiktive regning bliver.</p>
+    </Link>
+  )
+
   if (!run) {
     return (
       <div className="text-center py-24">
@@ -25,6 +33,7 @@ export default async function HomePage() {
         <p style={{ color: 'var(--text-muted)' }} className="text-sm">
           Backend har ikke genereret nogle rækker endnu. Prøv igen snart.
         </p>
+        <div className="max-w-xl mx-auto mt-6">{simulatorLink}</div>
       </div>
     )
   }
@@ -83,6 +92,8 @@ export default async function HomePage() {
         </div>
       )}
 
+      {simulatorLink}
+
       {/* Footer note */}
       <div
         className="rounded-xl p-4 text-xs"
@@ -94,7 +105,7 @@ export default async function HomePage() {
       >
         <span className="font-semibold" style={{ color: '#888899' }}>Husk:</span>{' '}
         Lotto er et tilfældighedsspil. AI kan finde mønstre, men ikke fremtiden. Spil ansvarligt — og spil kun for sjov.
-        Odds for jackpot: ca. 1 : 2.098.800. Men hey, nogen vinder jo! 🤞
+        Odds for jackpot: 1 : 8.347.680. Men hey, nogen vinder jo! 🤞
       </div>
     </div>
   )

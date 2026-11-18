@@ -127,3 +127,54 @@ body {
   background: var(--border);
   border-radius: 3px;
 }
+
+/* Lotto simulator */
+.simulator { --text-muted: #a0a0b5; }
+.sim-muted { color: var(--text-muted); line-height: 1.65; }
+.sim-eyebrow { color: var(--gold); font-size: .65rem; font-weight: 800; letter-spacing: .16em; }
+.sim-intro { padding: 1rem 0 .5rem; }
+.sim-odds { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; font-size: .8rem; color: #b7b7ca; }
+.sim-odds strong { color: #e8e8f0; }
+.sim-badge { border: 1px solid #444050; border-radius: 100px; padding: .3rem .65rem; font-size: .65rem; color: #d8d4e6; white-space: nowrap; }
+.sim-row { display: flex; flex-wrap: wrap; align-items: center; gap: .55rem; }
+.sim-empty { width: 2rem; height: 2rem; display: inline-flex; align-items: center; justify-content: center; border: 1px dashed #565269; border-radius: 50%; color: #b7b7ca; }
+.sim-number-grid { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: .4rem; }
+.sim-number { aspect-ratio: 1; min-height: 32px; border: 1px solid #3b394d; border-radius: .55rem; font-size: .8rem; background: #20202d; font-weight: 600; cursor: pointer; }
+.sim-number.is-selected { background: var(--gold); border-color: var(--gold); color: #201b04; }
+.sim-number:disabled:not(.is-selected) { opacity: .5; }
+.simulator button:disabled, .simulator fieldset:disabled button { cursor: default; }
+.simulator fieldset:disabled { opacity: .65; }
+.simulator button:focus-visible, .simulator input:focus-visible, .simulator select:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
+.sim-button { border-radius: .6rem; padding: .8rem .6rem; font-size: .8rem; font-weight: 700; cursor: pointer; transition: filter .15s; }
+.sim-button:hover:not(:disabled) { filter: brightness(1.15); }
+.sim-button:disabled { opacity: .4; }
+.sim-primary { background: var(--gold); color: #201b04; border: 1px solid var(--gold); }
+.sim-secondary { background: #242232; color: #e7e3f5; border: 1px solid #464058; }
+.sim-price { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.simulator input, .simulator select { background: #101018; border: 1px solid #484258; border-radius: .5rem; color: #eeeaf6; padding: .65rem; font-size: .85rem; }
+.simulator input { width: 5rem; }
+.simulator select { width: 100%; }
+.simulator input:disabled { opacity: .65; }
+.sim-draw { border: 1px solid #393049; background: radial-gradient(ellipse at top, #342344, #17141f 80%); border-radius: .85rem; padding: 1.4rem .75rem; text-align: center; }
+.sim-hit { display: inline-flex; border-radius: 50%; outline: 2px solid var(--gold); outline-offset: 3px; }
+.sim-miss { opacity: .42; }
+.sim-jackpot { border-color: var(--gold); background: #30260d; }
+.sim-reset { font-size: .75rem; color: #bfb6d1; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
+.sim-reset:disabled { opacity: .4; }
+.sim-receipt { border: 1px solid #5e4b22; border-radius: 1rem; background: linear-gradient(115deg, #272113, #191720 75%); }
+.sim-stat { font-size: clamp(1.5rem, 3vw, 2rem); line-height: 1.5; font-weight: 900; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.sim-gold { color: var(--gold); }
+.sim-comparison { border-top: 1px dashed #5b4c32; padding-top: 1rem; font-size: .8rem; color: #c5bfad; line-height: 1.8; }
+.sim-result-row { display: grid; grid-template-columns: 4.25rem 1fr 5rem; gap: .75rem; align-items: center; font-size: .75rem; color: #b9b6ca; }
+.sim-result-row strong { text-align: right; font-variant-numeric: tabular-nums; color: #eeeaf6; }
+.sim-track { height: .4rem; border-radius: 1rem; background: #2b273a; overflow: hidden; }
+.sim-track > div { height: 100%; background: linear-gradient(90deg, #8b5cf6, #f5c518); border-radius: inherit; }
+@media (max-width: 420px) {
+  .sim-number-grid { gap: .25rem; }
+  .sim-row { gap: .4rem; }
+  .sim-badge { font-size: .6rem; padding: .25rem .45rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .float-anim, .shimmer-text, .hero-card-animate { animation: none; }
+}

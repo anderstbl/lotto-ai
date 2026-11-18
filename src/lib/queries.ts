@@ -1,4 +1,5 @@
 import { getSupabase } from './supabase'
+import { previousWeekRange, rowRank } from './jackpot-search'
 import type { Draw, PredictionRun, Prediction, Backtest } from '@/types'
 
 function toNumberArray(value: unknown): number[] {
@@ -106,4 +107,27 @@ export function computeNumberFrequency(draws: Draw[]): Map<number, number> {
     }
   }
   return freq
+}
+
+// Only use draws from the previous calendar week in Denmark. Never silently
+// substitute an older draw when imports are delayed.
+export async function getPreviousWeekDraw(): Promise<Draw | null> {
+  try {
+    const { start, end } = previousWeekRange()
+    const { data, error } = await getSupabase()
+      .from('draws')
+      .select('*')
+      .gte('draw_date', start)
+      .lt('draw_date', end)
+      .order('draw_date', { ascending: false })
+      .limit(1)
+    if (error) throw error
+    if (!data?.[0]) return null
+    const draw = { ...data[0], numbers: toNumberArray(data[0].numbers), bonus_numbers: toNumberArray(data[0].bonus_numbers) }
+    rowRank(draw.numbers) // Reject malformed imports before offering a search.
+    return draw
+  } catch (error) {
+    console.error('getPreviousWeekDraw:', error instanceof Error ? error.message : 'Kunne ikke hente trækningen')
+    return null
+  }
 }
