@@ -461,3 +461,14 @@ a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outli
 .sim-manual-winning .sim-manual-target { margin: 0; }
 .sim-manual-rows .sim-row > span { display: inline-flex; line-height: 1; }
 .sim-manual-header:has(.sim-manual-summary) #manual-dialog-description { display: none; }
+
+/* Winning numbers introduce the game across its full width. */
+.sim-winning-intro { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(280px, 1.5fr) auto; align-items: center; gap: 1.5rem; background: linear-gradient(115deg, #192b31, #171b24); border-color: #475d62; }
+.sim-winning-price { display: flex; flex-direction: column; gap: .3rem; text-align: right; }
+.sim-winning-price strong { color: var(--gold); font-size: 1.5rem; font-weight: 900; }
+.sim-winning-price span { color: var(--text-muted); font-size: .65rem; }
+.sim-computer-cta { background: linear-gradient(110deg, #8edcff, #b9b6ff); border-color: #badfff; color: #102137; min-height: 52px; font-size: .95rem; box-shadow: 0 4px 24px #8edcff20; }
+@media (max-width: 767px) {
+  .sim-winning-intro { grid-template-columns: 1fr; gap: 1rem; }
+  .sim-winning-price { text-align: left; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: .4rem .7rem; border-top: 1px solid #475d62; padding-top: .8rem; }
+}

@@ -104,21 +104,20 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
         <div className="sim-odds mt-5"><span aria-hidden="true">🎱</span> 7 af 36 tal <span>·</span> Jackpotchance: <strong>1 ud af {integer.format(JACKPOT_ODDS)}</strong></div>
       </section>
 
-      <div className="grid lg:grid-cols-[1.1fr_1fr] gap-5">
-        <section className="card p-5 sm:p-6" aria-labelledby="winning-row">
-          <div className="flex justify-between items-center gap-3 mb-4">
-            <h2 id="winning-row" className="font-bold text-lg">01 <span className="sim-muted ml-2">De seneste vindertal</span></h2>
-            <span className="sim-badge">Dit mål</span>
+      <div className="flex flex-col gap-5">
+        <section className="card sim-winning-intro p-5 sm:p-6" aria-labelledby="winning-row">
+          <div>
+            <p className="sim-eyebrow">01 · DIT MÅL</p>
+            <h2 id="winning-row" className="font-bold text-lg mt-2">De seneste vindertal</h2>
+            {draw && <p className="sim-muted text-xs mt-2">Trækning {new Date(`${draw.draw_date.slice(0, 10)}T12:00:00Z`).toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Copenhagen' })}</p>}
           </div>
-          {draw ? <>
-            <p className="sim-muted text-sm mb-5">Trækning {new Date(`${draw.draw_date.slice(0, 10)}T12:00:00Z`).toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Copenhagen' })}</p>
-            <div className="sim-row" aria-label="Vindertallene du skal ramme">
-              {[...selected].sort((a, b) => a - b).map(n => <LottoBall key={n} number={n} size="sm" />)}
-            </div>
-            <p className="sim-muted text-sm mt-5">Disse syv tal ligger fast. Hvert forsøg er en kupon med 10 tilfældige rækker. Hver række har 7 forskellige tal fra 1 til 36.</p>
-          </> : <p className="sim-muted text-sm" role="status">De seneste vindertal er ikke tilgængelige lige nu. Prøv igen, når trækningen er indlæst.</p>}
-          <div className="sim-comparison mt-6 flex justify-between gap-3"><span>10 rækker × 10 kr.</span><strong className="sim-gold">100 kr. pr. kupon</strong></div>
-          <p className="sim-muted text-xs mt-3">Start roligt, eller vælg lynhurtigt. Alle forsøg tæller med i samme jagt og samme fiktive regning.</p>
+          <div>
+            {draw ? <>
+              <div className="sim-row" aria-label="Vindertallene du skal ramme">{[...selected].sort((a, b) => a - b).map(n => <LottoBall key={n} number={n} size="sm" />)}</div>
+              <p className="sim-muted text-xs mt-3">Ram disse syv tal med 10 tilfældige rækker pr. kupon.</p>
+            </> : <p className="sim-muted text-sm" role="status">De seneste vindertal er ikke tilgængelige lige nu. Prøv igen, når trækningen er indlæst.</p>}
+          </div>
+          <div className="sim-winning-price"><strong>100 kr.</strong><span>pr. kupon · 10 × 10 kr.</span><span>Fiktive penge · kun for sjov</span></div>
         </section>
 
         <section className="card p-5 sm:p-6 flex flex-col" aria-labelledby="start-heading">
@@ -144,7 +143,7 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
                 <option value={1000}>Hurtigt · ca. 100 kuponer / sekund</option>
                 <option value={10000}>Lynhurtigt · ca. 1.000 kuponer / sekund</option>
               </select>
-              <button type="button" className="sim-button sim-secondary w-full" disabled={rolling || (!active && !ready)} onClick={() => setRunning(!active)}>{active ? 'Ⅱ Pause computeren' : '⚡ Lad computeren køre'}</button>
+              <button type="button" className="sim-button sim-primary sim-computer-cta w-full" disabled={rolling || (!active && !ready)} onClick={() => setRunning(!active)}>{active ? 'Ⅱ Pause computeren' : '⚡ Lad computeren køre'}</button>
             </section>
             <section className="sim-play-mode sim-play-yourself" aria-labelledby="manual-mode">
               <span className="sim-mode-icon" aria-hidden="true">🎱</span>
