@@ -4,6 +4,9 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import LottoBall from '@/components/LottoBall'
 import SimulatorDialog from '@/components/SimulatorDialog'
 import ManualTicketDialog from '@/components/ManualTicketDialog'
+import SaveHighscoreDialog from '@/components/SaveHighscoreDialog'
+import HighscoreLeaderboard from '@/components/HighscoreLeaderboard'
+import type { ScoreSubmission, SharedHighscore } from '@/lib/shared-highscore'
 import { MANUAL_SCORE_KEY, manualScore, betterHighscore, readHighscore, type ManualHighscore } from '@/lib/manual-score'
 import {
   createRandomInt, emptySimulation, jackpotChance,
@@ -14,7 +17,7 @@ const integer = new Intl.NumberFormat('da-DK', { maximumFractionDigits: 0 })
 const money = new Intl.NumberFormat('da-DK', { style: 'currency', currency: 'DKK', maximumFractionDigits: 2 })
 const noNumbers: number[] = []
 
-export default function LottoSimulator({ draw }: { draw: { numbers: number[]; draw_date: string } | null }) {
+export default function LottoSimulator({ draw }: { draw: { id: string; numbers: number[]; draw_date: string } | null }) {
   const selected = draw?.numbers ?? noNumbers
   const [speed, setSpeed] = useState(1000)
   const [running, setRunning] = useState(false)
@@ -23,6 +26,12 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
   const [manualAttempts, setManualAttempts] = useState(0)
   const [highscore, setHighscore] = useState<ManualHighscore | null>(null)
   const [scoreStorageAvailable, setScoreStorageAvailable] = useState(true)
+  const [manualSubmissionId, setManualSubmissionId] = useState<string | null>(null)
+  const [saveCandidate, setSaveCandidate] = useState<(ScoreSubmission & { points: number; matches: number }) | null>(null)
+  const [savedSubmissions, setSavedSubmissions] = useState<Set<string>>(() => new Set())
+  const [leaderboardVersion, setLeaderboardVersion] = useState(0)
+  const [savedScoreId, setSavedScoreId] = useState<string | null>(null)
+  const [playerName, setPlayerName] = useState('')
   const [manualOpen, setManualOpen] = useState(false)
   const [manualRound, setManualRound] = useState<Simulation | null>(null)
   const [rolling, setRolling] = useState(false)
@@ -71,10 +80,26 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
     if (rolling || active || cashedOut || selected.length !== 7) return
     const result = simulateBatch({ ...simulation, milestone: null }, selected, ROWS_PER_TICKET, getRandom())
     setSimulation(result)
+    setManualSubmissionId(crypto.randomUUID())
     setManualAttempts(attempts => attempts + 1)
     setManualRound(result)
     setRolling(true)
     setRevealId(id => id + 1)
+  }
+
+  function openSaveScore() {
+    if (!draw || !manualRound || !manualSubmissionId || rolling || savedSubmissions.has(manualSubmissionId)) return
+    const best = manualRound.latestTicket.reduce((current, row) => row.matches > current.matches ? row : current)
+    if (best.matches < 1) return
+    setSaveCandidate({ submission_id: manualSubmissionId, draw_id: draw.id, row_numbers: best.numbers, attempts: manualAttempts,
+      matches: best.matches, points: manualScore(best.matches, manualAttempts) })
+  }
+
+  function scoreSaved(score: SharedHighscore) {
+    if (saveCandidate) setSavedSubmissions(previous => new Set(previous).add(saveCandidate.submission_id))
+    setPlayerName(score.player_name)
+    setSavedScoreId(score.id)
+    setLeaderboardVersion(value => value + 1)
   }
 
   function closeManualRound() {
@@ -115,7 +140,8 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
 
   return (
     <div className="simulator flex flex-col gap-6">
-      {manualOpen && <ManualTicketDialog key={manualRound?.attempts ?? 'ready'} round={manualRound} winningNumbers={selected} manualAttempts={manualAttempts} highscore={highscore}
+      {saveCandidate && <SaveHighscoreDialog submission={saveCandidate} initialName={playerName} onSaved={scoreSaved} onClose={() => setSaveCandidate(null)} />}
+      {manualOpen && <ManualTicketDialog key={manualRound?.attempts ?? 'ready'} round={manualRound} winningNumbers={selected} manualAttempts={manualAttempts} onSaveScore={openSaveScore} scoreSaved={!!manualSubmissionId && savedSubmissions.has(manualSubmissionId)}
         onComplete={finishManualAnimation} onStart={tryTicket} onRetry={tryTicket} onClose={closeManualRound} onCashOut={cashOut} />}
       <SimulatorDialog prize={cashedOut || manualOpen ? null : simulation.milestone} tickets={tickets} cost={money.format(cost)} automatic={running}
         onContinue={continuePlaying}
@@ -186,6 +212,8 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
         </section>
       </div>
 
+      <HighscoreLeaderboard refreshKey={leaderboardVersion} highlightId={savedScoreId} />
+
       <section className="card p-5 sm:p-6 sim-ticket" aria-labelledby="ticket-heading" aria-busy={rolling}>
         <div className="flex flex-wrap justify-between items-center gap-3 mb-5">
           <h2 id="ticket-heading" className="text-lg font-bold">Din seneste kupon</h2>
@@ -234,7 +262,7 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
           <p className="sim-muted text-sm mt-3">Efter {integer.format(simulation.attempts)} tilfældige rækker er den beregnede chance for at have ramt mindst én jackpot <strong className="text-white">{chance.toLocaleString('da-DK', { maximumFractionDigits: 5 })} %</strong>. Det er en sandsynlighed, ikke en måler der skal fyldes.</p>
           <p className="sim-muted text-sm mt-4">Næste række har stadig præcis samme chance: 1 ud af {integer.format(JACKPOT_ODDS)}. Alle rækker er lige sandsynlige — også 1, 2, 3, 4, 5, 6, 7.</p>
           <p className="sim-muted text-sm mt-4">Selv efter {integer.format(JACKPOT_ODDS)} rækker er chancen for mindst én jackpot kun cirka 63,2 %. Ved {money.format(ROW_PRICE)} pr. række ville de rækker koste {money.format(JACKPOT_ODDS * ROW_PRICE)}.</p>
-          <p className="sim-muted text-xs mt-5">Simulatoren trækker 7 forskellige tal blandt 36 uden betydning af rækkefølge. Tillægstal, øvrige præmiegrupper og udbetalinger er ikke medregnet. Der købes ingen kuponer, og resultater gemmes kun, mens siden er åben.</p>
+          <p className="sim-muted text-xs mt-5">Simulatoren trækker 7 forskellige tal blandt 36 uden betydning af rækkefølge. Tillægstal, øvrige præmiegrupper og udbetalinger er ikke medregnet. Der købes ingen kuponer. Kun resultater, du selv gemmer med navn, bliver delt på highscorelisten. Din personlige rekord gemmes også i browseren.</p>
         </section>
       </div>
     </div>

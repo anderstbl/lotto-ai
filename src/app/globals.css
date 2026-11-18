@@ -504,3 +504,18 @@ a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outli
 .sim-score-summary .sim-match-summary { line-height: 1.1; gap: .1rem .5rem; }
 
 .sim-manual-body { flex: 1; }
+.sim-save-score-link { color: var(--gold); font-size: .65rem; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.sim-save-score-link:disabled { opacity: .5; text-decoration: none; cursor: default; }
+.sim-score-form { text-align: left; }
+.sim-score-form label { font-size: .85rem; font-weight: 700; display: block; margin-bottom: .5rem; }
+.sim-score-form input { display: block; width: 100%; background: #101018; color: var(--text); border: 1px solid #6e647f; border-radius: .5rem; padding: .85rem; font-size: 1rem; }
+.sim-score-form input:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.sim-score-form button:disabled { opacity: .5; }
+.sim-leaderboard-wrap { overflow-x: auto; }
+.sim-leaderboard { width: 100%; border-collapse: collapse; text-align: left; font-size: .8rem; }
+.sim-leaderboard th, .sim-leaderboard td { padding: .8rem .4rem; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+.sim-leaderboard thead { color: var(--text-muted); font-size: .7rem; }
+.sim-leaderboard tbody th { overflow-wrap: anywhere; }
+.sim-leaderboard td:nth-child(3) { color: var(--gold); font-weight: 700; }
+.sim-leaderboard .is-your-score { background: #ffd65c12; }
+@media (max-width: 400px) { .sim-leaderboard { font-size: .65rem; } .sim-leaderboard th, .sim-leaderboard td { padding: .7rem .25rem; } }

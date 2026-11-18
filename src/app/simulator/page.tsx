@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 async function Game() {
   const draw = await getLatestWinningDraw()
-  return <LottoSimulator draw={draw ? { numbers: draw.numbers, draw_date: draw.draw_date } : null} />
+  return <LottoSimulator draw={draw ? { id: draw.id, numbers: draw.numbers, draw_date: draw.draw_date } : null} />
 }
 
 export const dynamic = 'force-dynamic'

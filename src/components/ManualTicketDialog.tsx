@@ -2,24 +2,25 @@
 
 import { useEffect, useRef, useState } from 'react'
 import LottoBall from '@/components/LottoBall'
-import { manualScore, type ManualHighscore } from '@/lib/manual-score'
+import { manualScore } from '@/lib/manual-score'
 import { ROWS_PER_TICKET, TICKET_PRICE, type Simulation } from '@/lib/lotto-simulator'
 
 interface Props {
   round: Simulation | null
   winningNumbers: readonly number[]
   manualAttempts: number
-  highscore: ManualHighscore | null
   onComplete: () => void
   onStart: () => void
   onRetry: () => void
   onClose: () => void
   onCashOut: () => void
+  onSaveScore: () => void
+  scoreSaved: boolean
 }
 
 const money = new Intl.NumberFormat('da-DK', { style: 'currency', currency: 'DKK', maximumFractionDigits: 0 })
 
-export default function ManualTicketDialog({ round, winningNumbers, manualAttempts, highscore, onComplete, onStart, onRetry, onClose, onCashOut }: Props) {
+export default function ManualTicketDialog({ round, winningNumbers, manualAttempts, onComplete, onStart, onRetry, onClose, onCashOut, onSaveScore, scoreSaved }: Props) {
   const dialog = useRef<HTMLDialogElement>(null)
   const [revealed, setRevealed] = useState(0)
   const complete = revealed === ROWS_PER_TICKET
@@ -58,7 +59,7 @@ export default function ManualTicketDialog({ round, winningNumbers, manualAttemp
         <div className="sim-manual-summary sim-score-summary" role="status">
           <h3>Bedste række: <strong>{complete ? `${best} rigtige` : '–'}</strong></h3>
           <div className="sim-match-summary">{complete ? counts.map((count, matches) => count > 0 ? <span key={matches}>{count} × {matches} rigtige</span> : null) : <span>{round ? 'Kuglerne ruller… resultatet vises her.' : 'Tryk Start for at spille 10 rækker.'}</span>}</div>
-          <p className="sim-manual-points"><span>Point: <strong>{complete ? manualScore(best, manualAttempts).toLocaleString('da-DK') : '–'}</strong></span><span>🏆 Rekord: <strong>{highscore?.points.toLocaleString('da-DK') ?? '–'}</strong></span></p>
+          <p className="sim-manual-points"><span>Point: <strong>{complete ? manualScore(best, manualAttempts).toLocaleString('da-DK') : '–'}</strong></span><button type="button" className="sim-save-score-link" disabled={!complete || best < 1 || scoreSaved} onClick={onSaveScore}>{scoreSaved ? '✓ Gemt på listen' : '🏆 Gem highscore'}</button></p>
           <p className="sim-muted sim-manual-attempts">{manualAttempts.toLocaleString('da-DK')} {manualAttempts === 1 ? 'manuelt forsøg' : 'manuelle forsøg'}{round ? ` · samlet indsats ${money.format(round.attempts / ROWS_PER_TICKET * TICKET_PRICE)}` : ' · 100 kr. pr. kupon'}</p>
         </div>
         <div className="sim-reveal-progress" aria-hidden="true"><span style={{ width: `${revealed * 10}%` }} /></div>
