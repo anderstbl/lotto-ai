@@ -418,3 +418,46 @@ a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outli
   .sim-manual-target .lotto-ball { width: 28px; height: 28px; }
   .sim-manual-rows .sim-empty { width: 20px; height: 20px; }
 }
+
+/* Compact manual coupon: keep the result summary above all ten rows. */
+.sim-manual-dialog { width: min(780px, calc(100% - 20px)); max-height: 96dvh; }
+.sim-manual-layout { max-height: 96dvh; }
+.sim-manual-header { padding: .8rem 1rem .6rem; }
+.sim-manual-header h2 { font-size: clamp(1.1rem, 3.8vw, 1.6rem); margin-top: .35rem; }
+.sim-manual-header #manual-dialog-description { font-size: .75rem; margin-top: .3rem; }
+.sim-manual-header .sim-manual-summary { margin-top: .5rem; padding: .55rem .7rem; }
+.sim-manual-header .sim-manual-summary h3 { font-size: .95rem; }
+.sim-manual-header .sim-match-summary { gap: .2rem .5rem; margin-top: .3rem; }
+.sim-manual-header .sim-match-summary span { font-size: .65rem; padding: 0; background: none; }
+.sim-manual-header .sim-manual-summary p { font-size: .65rem; margin-top: .3rem; }
+.sim-reveal-progress { margin-top: .5rem; height: 3px; }
+.sim-manual-body { padding: .6rem 1rem; }
+.sim-manual-body > .sim-eyebrow { margin-bottom: .3rem; font-size: .6rem; }
+.sim-manual-target { margin-bottom: .5rem; gap: .3rem; }
+.sim-manual-target .lotto-ball { width: 24px; height: 24px; font-size: 10px; }
+.sim-manual-rows { gap: .3rem; }
+.sim-manual-rows .sim-ticket-row { padding: .35rem .5rem; }
+.sim-manual-footer { padding: .6rem 1rem; gap: .5rem; }
+.sim-manual-footer .sim-button { padding: .65rem .4rem; font-size: .75rem; }
+@media (max-width: 767px) {
+  .sim-manual-header { padding: .6rem .7rem .45rem; }
+  .sim-manual-header .sim-eyebrow { font-size: .55rem; }
+  .sim-manual-header #manual-dialog-description { font-size: .68rem; line-height: 1.4; }
+  .sim-manual-body { padding: .4rem .7rem; }
+  .sim-manual-target .lotto-ball { width: 20px; height: 20px; font-size: 9px; }
+  .sim-manual-target { margin-bottom: .4rem; }
+  .sim-manual-rows { gap: 3px; }
+  .sim-manual-rows .sim-ticket-row { min-height: 24px; padding: 2px 4px; gap: 5px; grid-template-columns: 14px minmax(0, 1fr) 42px; }
+  .sim-manual-rows .sim-row { gap: 5px; }
+  .sim-manual-rows .lotto-ball, .sim-manual-rows .sim-empty { width: 18px; height: 18px; font-size: 9px; }
+  .sim-manual-rows .sim-ticket-index { font-size: 9px; }
+  .sim-manual-rows .sim-ticket-row > strong { font-size: 10px; white-space: nowrap; }
+  .sim-manual-rows .sim-ticket-row > strong span { display: inline; font-size: 8px; }
+  .sim-manual-footer { padding: .5rem .7rem; }
+  .sim-manual-footer .sim-button { padding: .6rem .2rem; font-size: .68rem; }
+}
+
+.sim-manual-winning { display: flex; flex-wrap: wrap; gap: .4rem .6rem; align-items: center; margin-bottom: .5rem; }
+.sim-manual-winning .sim-manual-target { margin: 0; }
+.sim-manual-rows .sim-row > span { display: inline-flex; line-height: 1; }
+.sim-manual-header:has(.sim-manual-summary) #manual-dialog-description { display: none; }

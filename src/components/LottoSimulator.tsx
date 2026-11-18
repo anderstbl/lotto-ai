@@ -19,6 +19,7 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
   const [running, setRunning] = useState(false)
   const [simulation, setSimulation] = useState(emptySimulation)
   const [cashedOut, setCashedOut] = useState(false)
+  const [manualOpen, setManualOpen] = useState(false)
   const [manualRound, setManualRound] = useState<Simulation | null>(null)
   const [rolling, setRolling] = useState(false)
   const [revealId, setRevealId] = useState(0)
@@ -38,6 +39,12 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
 
   const finishManualAnimation = useCallback(() => setRolling(false), [])
 
+  function openManualDialog() {
+    if (active || !ready) return
+    setManualRound(null)
+    setManualOpen(true)
+  }
+
   function tryTicket() {
     if (rolling || active || cashedOut || selected.length !== 7) return
     const result = simulateBatch({ ...simulation, milestone: null }, selected, ROWS_PER_TICKET, getRandom())
@@ -50,6 +57,7 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
   function closeManualRound() {
     setRolling(false)
     setManualRound(null)
+    setManualOpen(false)
     setSimulation(previous => ({ ...previous, milestone: null }))
   }
 
@@ -57,6 +65,7 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
     setRunning(false)
     setRolling(false)
     setManualRound(null)
+    setManualOpen(false)
     setCashedOut(true)
   }
 
@@ -82,9 +91,9 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
 
   return (
     <div className="simulator flex flex-col gap-6">
-      {manualRound && <ManualTicketDialog key={manualRound.attempts} round={manualRound} winningNumbers={selected}
-        onComplete={finishManualAnimation} onRetry={tryTicket} onClose={closeManualRound} onCashOut={cashOut} />}
-      <SimulatorDialog prize={cashedOut || manualRound ? null : simulation.milestone} tickets={tickets} cost={money.format(cost)} automatic={running}
+      {manualOpen && <ManualTicketDialog key={manualRound?.attempts ?? 'ready'} round={manualRound} winningNumbers={selected}
+        onComplete={finishManualAnimation} onStart={tryTicket} onRetry={tryTicket} onClose={closeManualRound} onCashOut={cashOut} />}
+      <SimulatorDialog prize={cashedOut || manualOpen ? null : simulation.milestone} tickets={tickets} cost={money.format(cost)} automatic={running}
         onContinue={continuePlaying}
         onCashOut={cashOut}
         onDismiss={() => { setRunning(false); continuePlaying() }} />
@@ -141,7 +150,7 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
               <span className="sim-mode-icon" aria-hidden="true">🎱</span>
               <h3 id="manual-mode">Prøv selv</h3>
               <p>Ét klik, én kupon. Se kuglerne rulle og afslør dine 10 rækker.</p>
-              <button type="button" className="sim-button sim-primary w-full" disabled={active || rolling || !ready} onClick={tryTicket}>🎱 Prøv 10 rækker · 100 kr.</button>
+              <button type="button" className="sim-button sim-primary w-full" disabled={active || rolling || !ready} onClick={openManualDialog}>🎱 Prøv 10 rækker · 100 kr.</button>
             </section>
           </div>
           <button type="button" className="sim-reset mt-4" disabled={rolling || (!simulation.attempts && !active)} onClick={resetGame}>Nulstil forsøg og regning</button>
