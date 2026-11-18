@@ -21,7 +21,6 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
   const pendingTicket = useRef<Simulation | null>(null)
   const [rolling, setRolling] = useState(false)
   const [revealId, setRevealId] = useState(0)
-  const manualTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const random = useRef<ReturnType<typeof createRandomInt> | null>(null)
   const jackpot = simulation.counts[7] > 0
   const active = running && !simulation.milestone && !cashedOut
@@ -36,21 +35,13 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
     return random.current
   }
 
-  useEffect(() => () => {
-    if (manualTimer.current !== null) clearTimeout(manualTimer.current)
-  }, [])
-
   function tryTicket() {
-    if (manualTimer.current !== null || active || !ready) return
+    if (pendingTicket.current !== null || active || !ready) return
     pendingTicket.current = simulateBatch(simulation, selected, ROWS_PER_TICKET, getRandom())
     setRolling(true)
-    const duration = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 900 : 2000
-    manualTimer.current = setTimeout(revealTicket, duration)
   }
 
   function revealTicket() {
-    if (manualTimer.current !== null) clearTimeout(manualTimer.current)
-    manualTimer.current = null
     if (pendingTicket.current) setSimulation(pendingTicket.current)
     pendingTicket.current = null
     setRevealId(id => id + 1)
@@ -120,12 +111,6 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
             <p className="sim-muted text-xs mt-2">Tal, der matcher vindertallene, lyser op. Se alle 10 rækker og deres træffere på kuponen nedenfor.</p>
           </div>
           <div className="sim-play-modes mt-5">
-            <section className="sim-play-mode sim-play-yourself" aria-labelledby="manual-mode">
-              <span className="sim-mode-icon" aria-hidden="true">🎱</span>
-              <h3 id="manual-mode">Prøv selv</h3>
-              <p>Ét klik, én kupon. Se kuglerne rulle og afslør dine 10 rækker.</p>
-              <button type="button" className="sim-button sim-primary w-full" disabled={active || rolling || !ready} onClick={tryTicket}>🎱 Prøv 10 rækker · 100 kr.</button>
-            </section>
             <section className="sim-play-mode sim-play-computer" aria-labelledby="computer-mode">
               <span className="sim-mode-icon" aria-hidden="true">⚡</span>
               <h3 id="computer-mode">Lad computeren spille</h3>
@@ -137,6 +122,12 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
                 <option value={10000}>Lynhurtigt · ca. 1.000 kuponer / sekund</option>
               </select>
               <button type="button" className="sim-button sim-secondary w-full" disabled={rolling || (!active && !ready)} onClick={() => setRunning(!active)}>{active ? 'Ⅱ Pause computeren' : '⚡ Lad computeren køre'}</button>
+            </section>
+            <section className="sim-play-mode sim-play-yourself" aria-labelledby="manual-mode">
+              <span className="sim-mode-icon" aria-hidden="true">🎱</span>
+              <h3 id="manual-mode">Prøv selv</h3>
+              <p>Ét klik, én kupon. Se kuglerne rulle og afslør dine 10 rækker.</p>
+              <button type="button" className="sim-button sim-primary w-full" disabled={active || rolling || !ready} onClick={tryTicket}>🎱 Prøv 10 rækker · 100 kr.</button>
             </section>
           </div>
           <button type="button" className="sim-reset mt-4" disabled={rolling || (!simulation.attempts && !active)} onClick={resetGame}>Nulstil forsøg og regning</button>

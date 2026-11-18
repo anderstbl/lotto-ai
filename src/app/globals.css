@@ -378,3 +378,15 @@ a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outli
   .sim-machine-ball { transform: rotate(var(--angle)) translateY(-72px) rotate(calc(-1 * var(--angle))); }
   .sim-confetti { display: none; }
 }
+
+/* Explicit playback is opt-in even when the device prefers reduced motion. */
+.sim-modal[data-motion="on"] .sim-machine-ball { animation: sim-ball-orbit 1.8s linear infinite !important; }
+.sim-modal[data-motion="on"] .sim-machine-ball-1 { animation-delay: -.26s !important; }
+.sim-modal[data-motion="on"] .sim-machine-ball-2 { animation-delay: -.52s !important; }
+.sim-modal[data-motion="on"] .sim-machine-ball-3 { animation-delay: -.78s !important; }
+.sim-modal[data-motion="on"] .sim-machine-ball-4 { animation-delay: -1.04s !important; }
+.sim-modal[data-motion="on"] .sim-machine-ball-5 { animation-delay: -1.3s !important; }
+.sim-modal[data-motion="on"] .sim-machine-ball-6 { animation-delay: -1.56s !important; }
+.sim-modal[data-motion="on"] .sim-machine-cage { animation: sim-machine-spin 3s linear infinite !important; }
+.sim-modal[data-motion="off"] .sim-machine-ball { animation: none; transform: rotate(var(--angle)) translateY(-72px) rotate(calc(-1 * var(--angle))); }
+.sim-modal[data-motion="off"] .sim-machine-cage { animation: none; }

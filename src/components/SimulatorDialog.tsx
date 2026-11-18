@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import LottoBall from '@/components/LottoBall'
 import type { TicketRow } from '@/lib/lotto-simulator'
 
@@ -17,6 +17,7 @@ interface Props {
 }
 
 export default function SimulatorDialog({ rolling, prize, tickets, cost, automatic, onReveal, onContinue, onCashOut, onDismiss }: Props) {
+  const [motion, setMotion] = useState<'auto' | 'on' | 'off'>('auto')
   const dialog = useRef<HTMLDialogElement>(null)
   const stage = rolling ? 'drawing' : prize ? 'prize' : null
 
@@ -29,7 +30,7 @@ export default function SimulatorDialog({ rolling, prize, tickets, cost, automat
   }, [stage])
 
   return <dialog ref={dialog} className={`sim-modal ${rolling ? 'sim-modal-drawing' : 'sim-modal-prize'}`}
-    aria-labelledby="sim-dialog-title" aria-describedby="sim-dialog-description"
+    data-motion={motion} aria-labelledby="sim-dialog-title" aria-describedby="sim-dialog-description"
     onCancel={event => { event.preventDefault(); if (rolling) onReveal(); else onDismiss() }}>
     {rolling ? <div className="sim-modal-content">
       <p className="sim-eyebrow">DIT MANUELLE FORSØG</p>
@@ -39,8 +40,11 @@ export default function SimulatorDialog({ rolling, prize, tickets, cost, automat
         {[3, 8, 14, 19, 23, 28, 35].map((n, i) => <span key={n} className={`sim-machine-ball sim-machine-ball-${i}`}><LottoBall number={n} size="sm" /></span>)}
         <span className="sim-machine-label">10<span>RÆKKER</span></span>
       </div>
-      <p id="sim-dialog-description">Kuglerne blandes til din kupon.<br />10 rækker · 100 fiktive kroner.</p>
-      <button type="button" className="sim-button sim-secondary mt-5" data-primary-action onClick={onReveal}>Vis kuponen nu →</button>
+      <p id="sim-dialog-description">10 rækker · 100 fiktive kroner.<br />Popupen bliver stående, indtil du vælger at se din kupon.</p>
+      <div className="sim-prize-actions mt-5">
+        <button type="button" className="sim-button sim-primary" data-primary-action onClick={onReveal}>Vis min kupon →</button>
+        <button type="button" className="sim-button sim-secondary" aria-pressed={motion === 'on'} onClick={() => setMotion(current => current === 'on' ? 'off' : 'on')}>{motion === 'on' ? 'Ⅱ Sæt animation på pause' : '↻ Afspil kugle-animation'}</button>
+      </div>
     </div> : prize ? <div className="sim-modal-content" key={`${tickets}-${prize.matches}`}>
       <div className="sim-confetti" aria-hidden="true">{Array.from({ length: 18 }, (_, i) => <i key={i} style={{ left: `${i * 5.8}%`, animationDelay: `${i % 5 * 80}ms`, background: ['#ffd65c', '#8edcff', '#ef83cf'][i % 3] }} />)}</div>
       <span className="sim-prize-icon" aria-hidden="true">{prize.matches === 7 ? '🏆' : '🎉'}</span>
