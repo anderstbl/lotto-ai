@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import LottoBall from '@/components/LottoBall'
 import {
   createRandomInt, emptySimulation, jackpotChance,
-  JACKPOT_ODDS, ROW_PRICE, simulateBatch,
+  JACKPOT_ODDS, ROW_PRICE, ROWS_PER_TICKET, TICKET_PRICE, WEEKLY_ROWS, simulateBatch,
 } from '@/lib/lotto-simulator'
 
 const integer = new Intl.NumberFormat('da-DK', { maximumFractionDigits: 0 })
@@ -16,11 +16,16 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
   const [speed, setSpeed] = useState(1000)
   const [running, setRunning] = useState(false)
   const [simulation, setSimulation] = useState(emptySimulation)
+  const [rolling, setRolling] = useState(false)
+  const [revealId, setRevealId] = useState(0)
+  const manualTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const random = useRef<ReturnType<typeof createRandomInt> | null>(null)
   const jackpot = simulation.counts[7] > 0
   const active = running && !jackpot
   const ready = selected.length === 7 && !jackpot
-  const cost = simulation.attempts * ROW_PRICE
+  const tickets = simulation.attempts / ROWS_PER_TICKET
+  const cost = tickets * TICKET_PRICE
+  const ticketBest = Math.max(0, ...simulation.latestTicket.map(row => row.matches))
   const chance = jackpotChance(simulation.attempts) * 100
 
   function getRandom() {
@@ -28,11 +33,28 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
     return random.current
   }
 
+  useEffect(() => () => {
+    if (manualTimer.current !== null) clearTimeout(manualTimer.current)
+  }, [])
+
+  function tryTicket() {
+    if (manualTimer.current !== null || active || !ready) return
+    const result = simulateBatch(simulation, selected, ROWS_PER_TICKET, getRandom())
+    setRolling(true)
+    const duration = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 650
+    manualTimer.current = setTimeout(() => {
+      manualTimer.current = null
+      setSimulation(result)
+      setRevealId(id => id + 1)
+      setRolling(false)
+    }, duration)
+  }
+
   useEffect(() => {
     if (!active) return
     const randomInt = random.current ??= createRandomInt()
     const timer = window.setInterval(() => {
-      setSimulation(previous => simulateBatch(previous, selected, Math.max(1, speed / 20), randomInt))
+      setSimulation(previous => simulateBatch(previous, selected, Math.max(ROWS_PER_TICKET, speed / 20), randomInt))
     }, speed === 1 ? 1000 : 50)
     return () => window.clearInterval(timer)
   }, [active, selected, speed])
@@ -42,7 +64,7 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
       <section className="sim-intro">
         <p className="sim-eyebrow">ET LILLE EKSPERIMENT MED STORE ODDS</p>
         <h1 className="text-3xl sm:text-5xl font-black tracking-tight mt-3">Jagten på <span className="shimmer-text">7 rigtige.</span></h1>
-        <p className="sim-muted mt-4 max-w-2xl">Kan du ramme de seneste vindertal? Prøv tilfældige rækker én ad gangen, eller lad kuglerne rulle automatisk. Hvert forsøg koster 10 fiktive kroner.</p>
+        <p className="sim-muted mt-4 max-w-2xl">Kan du ramme de seneste vindertal? Prøv en kupon med 10 tilfældige rækker ad gangen, eller lad kuglerne rulle automatisk. En kupon koster 100 fiktive kroner.</p>
         <div className="sim-odds mt-5"><span aria-hidden="true">🎱</span> 7 af 36 tal <span>·</span> Jackpotchance: <strong>1 ud af {integer.format(JACKPOT_ODDS)}</strong></div>
       </section>
 
@@ -57,47 +79,61 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
             <div className="sim-row" aria-label="Vindertallene du skal ramme">
               {[...selected].sort((a, b) => a - b).map(n => <LottoBall key={n} number={n} size="sm" />)}
             </div>
-            <p className="sim-muted text-sm mt-5">Disse syv tal ligger fast. Hver gang du prøver, laver vi en ny tilfældig række med 7 forskellige tal fra 1 til 36.</p>
+            <p className="sim-muted text-sm mt-5">Disse syv tal ligger fast. Hvert forsøg er en kupon med 10 tilfældige rækker. Hver række har 7 forskellige tal fra 1 til 36.</p>
           </> : <p className="sim-muted text-sm" role="status">De seneste vindertal er ikke tilgængelige lige nu. Prøv igen, når trækningen er indlæst.</p>}
-          <div className="sim-comparison mt-6 flex justify-between gap-3"><span>Pris pr. række</span><strong className="sim-gold">10 kr.</strong></div>
+          <div className="sim-comparison mt-6 flex justify-between gap-3"><span>10 rækker × 10 kr.</span><strong className="sim-gold">100 kr. pr. kupon</strong></div>
           <p className="sim-muted text-xs mt-3">Start roligt, eller vælg lynhurtigt. Alle forsøg tæller med i samme jagt og samme fiktive regning.</p>
         </section>
 
         <section className="card p-5 sm:p-6 flex flex-col" aria-labelledby="start-heading">
           <h2 id="start-heading" className="font-bold text-lg">02 <span className="sim-muted ml-2">Lad kuglerne rulle</span></h2>
           <div className={`sim-draw mt-5 ${jackpot ? 'sim-jackpot' : ''}`}>
-            <p className="sim-eyebrow">DIN SENESTE RÆKKE</p>
-            <div className="sim-row justify-center my-5">
-              {simulation.latest.length ? simulation.latest.map(n => (
+            <p className="sim-eyebrow">KUGLERNE RULLER</p>
+            <div className={`sim-row justify-center my-5 ${rolling ? 'sim-tumbling' : ''}`} aria-hidden={rolling}>
+              {rolling ? [3, 8, 14, 19, 23, 28, 35].map(n => <LottoBall key={n} number={n} size="sm" />) : simulation.latest.length ? simulation.latest.map(n => (
                 <span key={n} className={selected.includes(n) ? 'sim-hit' : 'sim-miss'}><LottoBall number={n} size="sm" /></span>
               )) : Array.from({ length: 7 }, (_, i) => <span key={i} className="sim-empty">–</span>)}
             </div>
-            <p className="text-sm" role="status">{jackpot ? `🎉 7 rigtige efter ${integer.format(simulation.attempts)} forsøg!` : simulation.latest.length ? `${simulation.latest.filter(n => selected.includes(n)).length} rigtige i seneste række · ${simulation.bestMatches} er din rekord` : draw ? 'Vindertallene er klar. Skal vi prøve lykken?' : 'Afventer vindertal.'}</p>
-            <p className="sim-muted text-xs mt-2">Tal, der matcher vindertallene, lyser op. Hvert forsøg er en ny, uafhængig række.</p>
+            <p className="text-sm" role="status">{rolling ? 'Kuglerne blandes… din kupon er på vej!' : jackpot ? `🎉 7 rigtige på kupon nr. ${integer.format(tickets)}!` : simulation.latest.length ? `${ticketBest} rigtige på seneste kupon · ${simulation.bestMatches} er din rekord` : draw ? 'Vindertallene er klar. Skal vi prøve lykken?' : 'Afventer vindertal.'}</p>
+            <p className="sim-muted text-xs mt-2">Tal, der matcher vindertallene, lyser op. Se alle 10 rækker og deres træffere på kuponen nedenfor.</p>
           </div>
           <label htmlFor="simulation-speed" className="text-sm font-semibold mt-5 mb-2">Tempo</label>
           <select id="simulation-speed" value={speed} onChange={event => setSpeed(Number(event.target.value))}>
-            <option value={1}>Roligt · ca. 1 forsøg / sekund</option>
-            <option value={1000}>Hurtigt · ca. 1.000 forsøg / sekund</option>
-            <option value={10000}>Lynhurtigt · ca. 10.000 forsøg / sekund</option>
+            <option value={1}>Roligt · ca. 1 kupon / sekund</option>
+            <option value={1000}>Hurtigt · ca. 100 kuponer / sekund</option>
+            <option value={10000}>Lynhurtigt · ca. 1.000 kuponer / sekund</option>
           </select>
           <div className="grid grid-cols-2 gap-3 mt-4">
-            <button type="button" className="sim-button sim-secondary" disabled={active || !ready}
-              onClick={() => setSimulation(current => simulateBatch(current, selected, 1, getRandom()))}>Prøv 1 række</button>
-            <button type="button" className="sim-button sim-primary" disabled={!active && !ready}
+            <button type="button" className="sim-button sim-secondary" disabled={active || rolling || !ready}
+              onClick={tryTicket}>🎱 Prøv 10 rækker</button>
+            <button type="button" className="sim-button sim-primary" disabled={rolling || (!active && !ready)}
               onClick={() => setRunning(!active)}>{active ? 'Ⅱ Pause' : simulation.attempts ? '▶ Fortsæt' : '▶ Start jagten'}</button>
           </div>
-          <button type="button" className="sim-reset mt-4" disabled={!simulation.attempts && !active} onClick={() => { setRunning(false); setSimulation(emptySimulation()) }}>Nulstil forsøg og regning</button>
-          <p className="sim-muted text-xs mt-auto pt-5">Stopper automatisk ved 7 rigtige. Du kan pause og fortsætte når som helst. Tempo afhænger af din enhed.</p>
+          <button type="button" className="sim-reset mt-4" disabled={rolling || (!simulation.attempts && !active)} onClick={() => { setRunning(false); setSimulation(emptySimulation()) }}>Nulstil forsøg og regning</button>
+          <p className="sim-muted text-xs mt-auto pt-5">Stopper efter den kupon, der rammer 7 rigtige. Du kan pause og fortsætte når som helst. Tempo afhænger af din enhed.</p>
         </section>
       </div>
+
+      <section className="card p-5 sm:p-6 sim-ticket" aria-labelledby="ticket-heading" aria-busy={rolling}>
+        <div className="flex flex-wrap justify-between items-center gap-3 mb-5">
+          <h2 id="ticket-heading" className="text-lg font-bold">Din seneste kupon</h2>
+          <span className="sim-badge">{simulation.latestTicket.length ? `Bedste række: ${ticketBest} rigtige` : '10 rækker · 100 kr.'}</span>
+        </div>
+        {rolling ? <div className="sim-ticket-wait"><span className="sim-drum" aria-hidden="true">🎱</span><p>Vi blander kuglerne og gør 10 rækker klar…</p></div> : simulation.latestTicket.length ? <div key={revealId} className={`sim-ticket-grid ${revealId && !active ? 'sim-ticket-reveal' : ''}`}>
+          {simulation.latestTicket.map((row, index) => <div key={index} className={`sim-ticket-row ${row.matches === ticketBest ? 'sim-ticket-best' : ''}`} style={{ animationDelay: `${index * 45}ms` }}>
+            <span className="sim-ticket-index">{index + 1}</span>
+            <div className="sim-row">{row.numbers.map(n => <span key={n} className={selected.includes(n) ? 'sim-hit' : 'sim-miss'}><LottoBall number={n} size="sm" /></span>)}</div>
+            <strong>{row.matches}<span> rigtige</span></strong>
+          </div>)}
+        </div> : <p className="sim-muted text-sm">Tryk på “Prøv 10 rækker” for at se din første kupon. Vi fremhæver matchende tal og kuponens bedste række.</p>}
+      </section>
 
       <section className="sim-receipt p-5 sm:p-7" aria-labelledby="receipt-heading">
         <div className="flex items-center justify-between gap-3"><h2 id="receipt-heading" className="text-lg font-bold">Din fiktive kvittering</h2><span className="sim-badge">0 kr. i virkeligheden</span></div>
         <div className="grid sm:grid-cols-3 gap-6 mt-6">
-          <div><p className="sim-muted text-sm">Forsøg</p><p className="sim-stat">{integer.format(simulation.attempts)}</p><p className="sim-muted text-xs">tilfældige rækker mod samme vindertal</p></div>
-          <div><p className="sim-muted text-sm">Du ville have brugt</p><p className="sim-stat sim-gold">{money.format(cost)}</p><p className="sim-muted text-xs">{integer.format(simulation.attempts)} × {money.format(ROW_PRICE)} · før eventuelle gevinster</p></div>
-          <div><p className="sim-muted text-sm">Med én række om ugen</p><p className="sim-stat">{integer.format(simulation.attempts / 52)} år</p><p className="sim-muted text-xs">beregnet med 52 uger pr. år</p></div>
+          <div><p className="sim-muted text-sm">Kuponer / forsøg</p><p className="sim-stat">{integer.format(tickets)}</p><p className="sim-muted text-xs">{integer.format(simulation.attempts)} rækker i alt · 10 pr. kupon</p></div>
+          <div><p className="sim-muted text-sm">Du ville have brugt</p><p className="sim-stat sim-gold">{money.format(cost)}</p><p className="sim-muted text-xs">{integer.format(tickets)} kuponer × {money.format(TICKET_PRICE)} · før eventuelle gevinster</p></div>
+          <div><p className="sim-muted text-sm">Med 10 rækker om ugen</p><p className="sim-stat">{(simulation.attempts / WEEKLY_ROWS).toLocaleString('da-DK', { maximumFractionDigits: 2 })} år</p><p className="sim-muted text-xs">én kupon om ugen · 52 uger pr. år</p></div>
         </div>
         <div className="sim-comparison mt-6">☕ Samme beløb som cirka <strong>{integer.format(cost / 40)} kopper kaffe</strong> à 40 kr. {cost >= 10000 && <>Eller <strong>{integer.format(cost / 10000)} ferier</strong> à 10.000 kr.</>}</div>
       </section>
@@ -115,9 +151,9 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
         <section className="card p-5 sm:p-6" aria-labelledby="odds-heading">
           <p className="sim-eyebrow">DET STORE PERSPEKTIV</p>
           <h2 id="odds-heading" className="text-xl font-bold mt-3">Held har ingen hukommelse.</h2>
-          <p className="sim-muted text-sm mt-3">Efter {integer.format(simulation.attempts)} uafhængige forsøg er den beregnede chance for at have ramt mindst én jackpot <strong className="text-white">{chance.toLocaleString('da-DK', { maximumFractionDigits: 5 })} %</strong>. Det er en sandsynlighed, ikke en måler der skal fyldes.</p>
+          <p className="sim-muted text-sm mt-3">Efter {integer.format(simulation.attempts)} tilfældige rækker er den beregnede chance for at have ramt mindst én jackpot <strong className="text-white">{chance.toLocaleString('da-DK', { maximumFractionDigits: 5 })} %</strong>. Det er en sandsynlighed, ikke en måler der skal fyldes.</p>
           <p className="sim-muted text-sm mt-4">Næste række har stadig præcis samme chance: 1 ud af {integer.format(JACKPOT_ODDS)}. Alle rækker er lige sandsynlige — også 1, 2, 3, 4, 5, 6, 7.</p>
-          <p className="sim-muted text-sm mt-4">Selv efter {integer.format(JACKPOT_ODDS)} forsøg er chancen for mindst én jackpot kun cirka 63,2 %. Ved {money.format(ROW_PRICE)} pr. række ville de forsøg koste {money.format(JACKPOT_ODDS * ROW_PRICE)}.</p>
+          <p className="sim-muted text-sm mt-4">Selv efter {integer.format(JACKPOT_ODDS)} rækker er chancen for mindst én jackpot kun cirka 63,2 %. Ved {money.format(ROW_PRICE)} pr. række ville de rækker koste {money.format(JACKPOT_ODDS * ROW_PRICE)}.</p>
           <p className="sim-muted text-xs mt-5">Simulatoren trækker 7 forskellige tal blandt 36 uden betydning af rækkefølge. Tillægstal, øvrige præmiegrupper og udbetalinger er ikke medregnet. Der købes ingen kuponer, og resultater gemmes kun, mens siden er åben.</p>
         </section>
       </div>

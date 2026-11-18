@@ -2,6 +2,9 @@ export const NUMBER_COUNT = 36
 export const ROW_SIZE = 7
 export const JACKPOT_ODDS = 8_347_680
 export const ROW_PRICE = 10
+export const ROWS_PER_TICKET = 10
+export const TICKET_PRICE = ROW_PRICE * ROWS_PER_TICKET
+export const WEEKLY_ROWS = ROWS_PER_TICKET * 52
 
 export function isValidRow(numbers: readonly number[]): boolean {
   return numbers.length === ROW_SIZE && new Set(numbers).size === ROW_SIZE
@@ -36,16 +39,22 @@ export function drawNumbers(randomInt: (upperBound: number) => number): number[]
   return pool.slice(0, ROW_SIZE).sort((a, b) => a - b)
 }
 
+export interface TicketRow {
+  numbers: number[]
+  matches: number
+}
+
 export interface Simulation {
   attempts: number
   counts: number[]
   latest: number[]
+  latestTicket: TicketRow[]
   best: number[]
   bestMatches: number
 }
 
 export function emptySimulation(): Simulation {
-  return { attempts: 0, counts: Array(8).fill(0), latest: [], best: [], bestMatches: 0 }
+  return { attempts: 0, counts: Array(8).fill(0), latest: [], latestTicket: [], best: [], bestMatches: 0 }
 }
 
 export function simulateBatch(
@@ -56,16 +65,22 @@ export function simulateBatch(
 ): Simulation {
   const next = { ...previous, counts: [...previous.counts] }
   const chosen = new Set(selected)
-  const end = previous.attempts + amount
+  const end = previous.attempts + Math.ceil(amount / ROWS_PER_TICKET) * ROWS_PER_TICKET
   while (next.attempts < end && next.counts[7] === 0) {
-    const draw = drawNumbers(randomInt)
-    const matches = draw.reduce((total, n) => total + Number(chosen.has(n)), 0)
-    next.attempts++
-    next.counts[matches]++
-    next.latest = draw
-    if (!next.best.length || matches > next.bestMatches) {
-      next.best = draw
-      next.bestMatches = matches
+    // Buy and evaluate a whole ten-row ticket, including when an early row wins.
+    // Stop before the next ticket so spending always reflects complete tickets.
+    next.latestTicket = []
+    for (let i = 0; i < ROWS_PER_TICKET; i++) {
+      const draw = drawNumbers(randomInt)
+      const matches = draw.reduce((total, n) => total + Number(chosen.has(n)), 0)
+      next.attempts++
+      next.counts[matches]++
+      next.latest = draw
+      next.latestTicket.push({ numbers: draw, matches })
+      if (!next.best.length || matches > next.bestMatches) {
+        next.best = draw
+        next.bestMatches = matches
+      }
     }
   }
   return next

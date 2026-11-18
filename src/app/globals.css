@@ -310,3 +310,28 @@ a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outli
   .site-header nav { max-width: 100%; }
   .site-header nav a { white-space: nowrap; padding: 10px; }
 }
+
+/* Ten-row tickets, with a brief lottery-style manual reveal. */
+.sim-ticket-grid { display: grid; gap: .55rem; }
+.sim-ticket-row { display: grid; grid-template-columns: 18px minmax(0, 1fr) 48px; align-items: center; gap: .5rem; border: 1px solid var(--border); background: #10171f; padding: .8rem .65rem; border-radius: .6rem; }
+.sim-ticket-row .sim-row { flex-wrap: nowrap; gap: clamp(4px, 1vw, 8px); }
+.sim-ticket-row .lotto-ball { width: clamp(22px, 5.2vw, 28px); height: clamp(22px, 5.2vw, 28px); font-size: 10px; }
+.sim-ticket-index { color: var(--text-muted); font: 11px ui-monospace, monospace; }
+.sim-ticket-row > strong { font-size: 12px; text-align: right; }
+.sim-ticket-row > strong span { display: block; font-size: 9px; font-weight: 400; color: var(--text-muted); }
+.sim-ticket-best { border-color: #b89a41; background: #292313; }
+.sim-ticket-best > strong { color: var(--gold); }
+.sim-ticket-row .sim-hit { outline-offset: 2px; outline-width: 1px; }
+.sim-ticket-wait { min-height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; color: var(--text-muted); font-size: .8rem; text-align: center; }
+.sim-drum { font-size: 3rem; display: inline-block; animation: sim-drum .65s ease-in-out infinite; }
+.sim-tumbling .lotto-ball { animation: sim-tumble .35s ease-in-out infinite alternate; }
+.sim-tumbling .lotto-ball:nth-child(even) { animation-direction: alternate-reverse; }
+.sim-ticket-reveal .sim-ticket-row { animation: sim-ticket-in .3s ease-out both; }
+@keyframes sim-drum { 0%, 100% { transform: rotate(-25deg); } 50% { transform: rotate(25deg) translateY(-5px); } }
+@keyframes sim-tumble { from { transform: translateY(-5px) rotate(-18deg); } to { transform: translateY(5px) rotate(18deg); } }
+@keyframes sim-ticket-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@media (min-width: 768px) { .sim-ticket-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 360px) { .sim-ticket-row .lotto-ball { width: 20px; height: 20px; } .sim-ticket-row .sim-row { gap: 3px; } .sim-ticket-row { padding: .7rem .4rem; gap: .3rem; grid-template-columns: 14px minmax(0, 1fr) 35px; } }
+@media (prefers-reduced-motion: reduce) {
+  .sim-drum, .sim-tumbling .lotto-ball, .sim-ticket-reveal .sim-ticket-row { animation: none; }
+}

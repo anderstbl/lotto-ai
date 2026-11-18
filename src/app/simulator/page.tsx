@@ -5,7 +5,7 @@ import LottoSimulator from '@/components/LottoSimulator'
 
 export const metadata: Metadata = {
   title: 'Lotto-simulator — Jagten på 7 rigtige | LottoAI',
-  description: 'Prøv at ramme de seneste vindertal for 10 fiktive kroner pr. række. Se dine træffere, den fiktive regning og hvor svært det er at ramme 7 af 36 tal.',
+  description: 'Prøv 10 rækker ad gangen mod de seneste vindertal. En kupon koster 100 fiktive kroner. Se dine træffere, den fiktive regning og hvor svært det er at ramme 7 af 36 tal.',
 }
 
 async function Game() {
