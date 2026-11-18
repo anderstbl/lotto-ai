@@ -61,7 +61,7 @@ test('manual and automatic batches form one continuous game and stop at the winn
   const manual = simulateBatch(emptySimulation(), winning, 1, randomInt)
   assert.equal(manual.attempts, 10)
   assert.equal(manual.bestMatches, 6)
-  const automatic = simulateBatch(manual, winning, 500, randomInt)
+  const automatic = simulateBatch({ ...manual, milestone: null }, winning, 500, randomInt)
   assert.equal(automatic.attempts, 20)
   assert.equal(automatic.counts[7], 10)
   assert.equal(automatic.attempts * ROW_PRICE, 200)
@@ -90,4 +90,31 @@ test('a year of ten rows a week is 52 tickets and 5,200 kroner', () => {
   assert.equal(year.attempts / ROWS_PER_TICKET, 52)
   assert.equal(year.attempts / WEEKLY_ROWS, 1)
   assert.equal(year.attempts * ROW_PRICE, 5200)
+})
+
+test('six matches pauses after the winning ticket, without buying the remaining automatic batch', () => {
+  const winning = [1, 2, 3, 4, 5, 6, 8]
+  const first = simulateBatch(emptySimulation(), winning, 10_000, () => 0)
+  assert.equal(first.attempts, 10)
+  assert.equal(first.milestone.matches, 6)
+  assert.equal(first.counts[6], 10)
+  assert.equal(first.attempts * ROW_PRICE, 100)
+  let randomCalls = 0
+  const paused = simulateBatch(first, winning, 500, () => { randomCalls++; return 0 })
+  assert.equal(paused, first)
+  assert.equal(randomCalls, 0)
+  const resumed = simulateBatch({ ...first, milestone: null }, winning, 500, () => 0)
+  assert.equal(resumed.attempts, 20)
+  assert.equal(resumed.milestone.matches, 6)
+  assert.equal(resumed.attempts * ROW_PRICE, 200)
+})
+
+test('play can continue after seven matches without resetting the receipt', () => {
+  const winning = [1, 2, 3, 4, 5, 6, 7]
+  const jackpot = simulateBatch(emptySimulation(), winning, 500, () => 0)
+  assert.equal(jackpot.milestone.matches, 7)
+  const next = simulateBatch({ ...jackpot, milestone: null }, winning, 10, () => 0)
+  assert.equal(next.attempts, 20)
+  assert.equal(next.counts[7], 20)
+  assert.equal(next.attempts * ROW_PRICE, 200)
 })

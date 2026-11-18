@@ -51,10 +51,11 @@ export interface Simulation {
   latestTicket: TicketRow[]
   best: number[]
   bestMatches: number
+  milestone: TicketRow | null
 }
 
 export function emptySimulation(): Simulation {
-  return { attempts: 0, counts: Array(8).fill(0), latest: [], latestTicket: [], best: [], bestMatches: 0 }
+  return { attempts: 0, counts: Array(8).fill(0), latest: [], latestTicket: [], best: [], bestMatches: 0, milestone: null }
 }
 
 export function simulateBatch(
@@ -63,10 +64,11 @@ export function simulateBatch(
   amount: number,
   randomInt: (upperBound: number) => number,
 ): Simulation {
+  if (previous.milestone) return previous
   const next = { ...previous, counts: [...previous.counts] }
   const chosen = new Set(selected)
   const end = previous.attempts + Math.ceil(amount / ROWS_PER_TICKET) * ROWS_PER_TICKET
-  while (next.attempts < end && next.counts[7] === 0) {
+  while (next.attempts < end && !next.milestone) {
     // Buy and evaluate a whole ten-row ticket, including when an early row wins.
     // Stop before the next ticket so spending always reflects complete tickets.
     next.latestTicket = []
@@ -82,6 +84,8 @@ export function simulateBatch(
         next.bestMatches = matches
       }
     }
+    const winningRow = next.latestTicket.reduce((best, row) => row.matches > best.matches ? row : best)
+    if (winningRow.matches >= 6) next.milestone = winningRow
   }
   return next
 }

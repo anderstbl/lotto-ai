@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react'
 import LottoBall from '@/components/LottoBall'
+import SimulatorDialog from '@/components/SimulatorDialog'
 import {
   createRandomInt, emptySimulation, jackpotChance,
-  JACKPOT_ODDS, ROW_PRICE, ROWS_PER_TICKET, TICKET_PRICE, WEEKLY_ROWS, simulateBatch,
+  type Simulation, JACKPOT_ODDS, ROW_PRICE, ROWS_PER_TICKET, TICKET_PRICE, WEEKLY_ROWS, simulateBatch,
 } from '@/lib/lotto-simulator'
 
 const integer = new Intl.NumberFormat('da-DK', { maximumFractionDigits: 0 })
@@ -16,13 +17,15 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
   const [speed, setSpeed] = useState(1000)
   const [running, setRunning] = useState(false)
   const [simulation, setSimulation] = useState(emptySimulation)
+  const [cashedOut, setCashedOut] = useState(false)
+  const pendingTicket = useRef<Simulation | null>(null)
   const [rolling, setRolling] = useState(false)
   const [revealId, setRevealId] = useState(0)
   const manualTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const random = useRef<ReturnType<typeof createRandomInt> | null>(null)
   const jackpot = simulation.counts[7] > 0
-  const active = running && !jackpot
-  const ready = selected.length === 7 && !jackpot
+  const active = running && !simulation.milestone && !cashedOut
+  const ready = selected.length === 7 && !simulation.milestone && !cashedOut
   const tickets = simulation.attempts / ROWS_PER_TICKET
   const cost = tickets * TICKET_PRICE
   const ticketBest = Math.max(0, ...simulation.latestTicket.map(row => row.matches))
@@ -39,15 +42,30 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
 
   function tryTicket() {
     if (manualTimer.current !== null || active || !ready) return
-    const result = simulateBatch(simulation, selected, ROWS_PER_TICKET, getRandom())
+    pendingTicket.current = simulateBatch(simulation, selected, ROWS_PER_TICKET, getRandom())
     setRolling(true)
-    const duration = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 650
-    manualTimer.current = setTimeout(() => {
-      manualTimer.current = null
-      setSimulation(result)
-      setRevealId(id => id + 1)
-      setRolling(false)
-    }, duration)
+    const duration = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 900 : 2000
+    manualTimer.current = setTimeout(revealTicket, duration)
+  }
+
+  function revealTicket() {
+    if (manualTimer.current !== null) clearTimeout(manualTimer.current)
+    manualTimer.current = null
+    if (pendingTicket.current) setSimulation(pendingTicket.current)
+    pendingTicket.current = null
+    setRevealId(id => id + 1)
+    setRolling(false)
+  }
+
+  function continuePlaying() {
+    setSimulation(previous => ({ ...previous, milestone: null }))
+  }
+
+  function resetGame() {
+    setRunning(false)
+    setCashedOut(false)
+    setSimulation(emptySimulation())
+    setRevealId(0)
   }
 
   useEffect(() => {
@@ -61,6 +79,10 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
 
   return (
     <div className="simulator flex flex-col gap-6">
+      <SimulatorDialog rolling={rolling} prize={cashedOut ? null : simulation.milestone} tickets={tickets} cost={money.format(cost)} automatic={running}
+        onReveal={revealTicket} onContinue={continuePlaying}
+        onCashOut={() => { setRunning(false); setCashedOut(true) }}
+        onDismiss={() => { setRunning(false); continuePlaying() }} />
       <section className="sim-intro">
         <p className="sim-eyebrow">ET LILLE EKSPERIMENT MED STORE ODDS</p>
         <h1 className="text-3xl sm:text-5xl font-black tracking-tight mt-3">Jagten på <span className="shimmer-text">7 rigtige.</span></h1>
@@ -97,20 +119,28 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
             <p className="text-sm" role="status">{rolling ? 'Kuglerne blandes… din kupon er på vej!' : jackpot ? `🎉 7 rigtige på kupon nr. ${integer.format(tickets)}!` : simulation.latest.length ? `${ticketBest} rigtige på seneste kupon · ${simulation.bestMatches} er din rekord` : draw ? 'Vindertallene er klar. Skal vi prøve lykken?' : 'Afventer vindertal.'}</p>
             <p className="sim-muted text-xs mt-2">Tal, der matcher vindertallene, lyser op. Se alle 10 rækker og deres træffere på kuponen nedenfor.</p>
           </div>
-          <label htmlFor="simulation-speed" className="text-sm font-semibold mt-5 mb-2">Tempo</label>
-          <select id="simulation-speed" value={speed} onChange={event => setSpeed(Number(event.target.value))}>
-            <option value={1}>Roligt · ca. 1 kupon / sekund</option>
-            <option value={1000}>Hurtigt · ca. 100 kuponer / sekund</option>
-            <option value={10000}>Lynhurtigt · ca. 1.000 kuponer / sekund</option>
-          </select>
-          <div className="grid grid-cols-2 gap-3 mt-4">
-            <button type="button" className="sim-button sim-secondary" disabled={active || rolling || !ready}
-              onClick={tryTicket}>🎱 Prøv 10 rækker</button>
-            <button type="button" className="sim-button sim-primary" disabled={rolling || (!active && !ready)}
-              onClick={() => setRunning(!active)}>{active ? 'Ⅱ Pause' : simulation.attempts ? '▶ Fortsæt' : '▶ Start jagten'}</button>
+          <div className="sim-play-modes mt-5">
+            <section className="sim-play-mode sim-play-yourself" aria-labelledby="manual-mode">
+              <span className="sim-mode-icon" aria-hidden="true">🎱</span>
+              <h3 id="manual-mode">Prøv selv</h3>
+              <p>Ét klik, én kupon. Se kuglerne rulle og afslør dine 10 rækker.</p>
+              <button type="button" className="sim-button sim-primary w-full" disabled={active || rolling || !ready} onClick={tryTicket}>🎱 Prøv 10 rækker · 100 kr.</button>
+            </section>
+            <section className="sim-play-mode sim-play-computer" aria-labelledby="computer-mode">
+              <span className="sim-mode-icon" aria-hidden="true">⚡</span>
+              <h3 id="computer-mode">Lad computeren spille</h3>
+              <p>Computeren køber kuponer, indtil du pauser eller rammer 6 eller 7 rigtige.</p>
+              <label htmlFor="simulation-speed" className="text-xs font-semibold">Computerens tempo</label>
+              <select id="simulation-speed" value={speed} disabled={rolling || cashedOut} onChange={event => setSpeed(Number(event.target.value))}>
+                <option value={1}>Roligt · ca. 1 kupon / sekund</option>
+                <option value={1000}>Hurtigt · ca. 100 kuponer / sekund</option>
+                <option value={10000}>Lynhurtigt · ca. 1.000 kuponer / sekund</option>
+              </select>
+              <button type="button" className="sim-button sim-secondary w-full" disabled={rolling || (!active && !ready)} onClick={() => setRunning(!active)}>{active ? 'Ⅱ Pause computeren' : '⚡ Lad computeren køre'}</button>
+            </section>
           </div>
-          <button type="button" className="sim-reset mt-4" disabled={rolling || (!simulation.attempts && !active)} onClick={() => { setRunning(false); setSimulation(emptySimulation()) }}>Nulstil forsøg og regning</button>
-          <p className="sim-muted text-xs mt-auto pt-5">Stopper efter den kupon, der rammer 7 rigtige. Du kan pause og fortsætte når som helst. Tempo afhænger af din enhed.</p>
+          <button type="button" className="sim-reset mt-4" disabled={rolling || (!simulation.attempts && !active)} onClick={resetGame}>Nulstil forsøg og regning</button>
+          <p className="sim-muted text-xs mt-auto pt-5">Samme spil og samme kvittering. Ved 6 eller 7 rigtige vælger du, om jagten skal fortsætte.</p>
         </section>
       </div>
 
@@ -127,6 +157,14 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
           </div>)}
         </div> : <p className="sim-muted text-sm">Tryk på “Prøv 10 rækker” for at se din første kupon. Vi fremhæver matchende tal og kuponens bedste række.</p>}
       </section>
+
+      {cashedOut && <section className="sim-cashout card p-6" role="status">
+        <p className="sim-eyebrow">GEVINSTEN ER TAGET HJEM · SPILLET ER AFSLUTTET</p>
+        <h2 className="text-2xl font-black mt-3">🏆 Du sluttede med {simulation.milestone?.matches} rigtige</h2>
+        <p className="sim-muted mt-3">{integer.format(tickets)} kuponer · {integer.format(simulation.attempts)} rækker · samlet indsats <strong className="sim-gold">{money.format(cost)}</strong>.</p>
+        <p className="sim-muted text-xs mt-2">Dette er din fiktive slutkvittering. Der er ikke beregnet et præmiebeløb.</p>
+        <button type="button" className="sim-button sim-primary mt-4" onClick={resetGame}>Start et nyt spil</button>
+      </section>}
 
       <section className="sim-receipt p-5 sm:p-7" aria-labelledby="receipt-heading">
         <div className="flex items-center justify-between gap-3"><h2 id="receipt-heading" className="text-lg font-bold">Din fiktive kvittering</h2><span className="sim-badge">0 kr. i virkeligheden</span></div>
