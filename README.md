@@ -2,16 +2,16 @@
 
 **A Danish Lotto dashboard for AI-generated number suggestions, draw history, and model insights.**
 
-LottoAI brings the latest predictions and their explanations into a responsive, dark-themed interface with purple and gold accents. Explore alternative strategies, revisit earlier prediction runs, and compare historical backtest results—all with Danish labels and date formatting.
+LottoAI brings the latest predictions and their explanations into a responsive, dark-themed interface with colorful number balls, a restrained dark visual theme, and stored-run status. Explore alternative strategies, revisit earlier prediction runs, and compare historical backtest results—all with Danish labels and date formatting.
 
 ## What you can explore
 
 | Page | Route | What it shows |
 | --- | --- | --- |
-| This week's picks | `/` | The latest prediction run, its top-ranked suggestion, alternative rows, and strategy explanations. |
+| This week's picks | `/` | The latest stored run, a featured row, method groups, and row statistics. |
 | Lotto simulator | `/simulator` | Pick 7 of 36, simulate independent draws, and track fictional spending, matches, and weekly time equivalents. The original mode works without database access; the historical quick search loads last week’s draw. |
 | Prediction history | `/history` | The 30 most recent prediction runs, including model versions and notes. |
-| Run details | `/history/[id]` | The ranked predictions from a specific run. |
+| Run details | `/history/[id]` | The rows from a specific run, grouped by method. |
 | Draw history | `/draws` | The latest 52 draws, bonus numbers, and number-frequency summaries. |
 | Model insights | `/backtests` | The latest 50 backtests, scores, match counts, and summaries by strategy. |
 
@@ -64,14 +64,14 @@ The following contract is based on `src/types/index.ts` and `src/lib/queries.ts`
 | Table | Expected fields |
 | --- | --- |
 | `prediction_runs` | `id`, `created_at`, `model_version`, `notes` |
-| `predictions` | `id`, `prediction_run_id`, `rank`, `label`, `play_priority`, `strategy_type`, `numbers`, `explanation`, `rationale` |
+| `predictions` | `id`, `prediction_run_id`, `rank`, `label`, `play_priority`, `strategy_type`, `numbers`, `explanation`, `rationale`, optional `selection_details` |
 | `draws` | `id`, `draw_date`, `numbers`, `bonus_numbers`, `created_at` |
 | `backtests` | `id`, `prediction_run_id`, `model_version`, `strategy_type`, `score`, `matches`, `notes`, `evaluated_at`, `created_at` |
 
 - IDs are represented as strings, dates as date/timestamp strings, and number lists as numeric arrays in the application types.
 - `predictions.prediction_run_id` links a prediction to its run. `backtests.prediction_run_id` may also reference a run, but can be null.
 - Nullable metadata and evaluation fields are defined in `src/types/index.ts`.
-- Prediction rows are ordered by ascending `rank`; the first row is highlighted as the primary suggestion. Runs and backtests are ordered by `created_at`, and draws by `draw_date`, newest first.
+- Prediction rows are ordered by ascending `rank`; the first row is featured for inspection. For validated `distribution_profile_v1` runs, rank follows the saved distribution score. Older runs retain display order and are labeled as such; neither indicates win probability. Runs and backtests are ordered by `created_at`, and draws by `draw_date`, newest first.
 - The query layer also normalizes number lists stored as JSON-array strings or comma-separated strings.
 
 The data pages render dynamically and query Supabase on each request. The frontend displays stored predictions and scores; it computes draw frequencies and strategy summaries for the records retrieved on the relevant page.
@@ -83,6 +83,7 @@ The data pages render dynamically and query Supabase on each request. The fronte
 | `npm run dev` | Start the development server. |
 | `npm run lint` | Run ESLint. |
 | `npm run build` | Create a production build. |
+| `npm test` | Validate snapshot integrity and run isolation (Node.js 22.6+). |
 | `npm start` | Serve the production build after building. |
 
 For production, configure the same environment variables on your host before building and running the app. Use a hosting environment that supports a Next.js server, since these pages need database access at request time.
@@ -117,6 +118,23 @@ src/
 ## A note on predictions
 
 LottoAI is for entertainment and exploration. Lottery draws are random; historical frequencies, AI-generated suggestions, and backtest results do not guarantee future wins. Play responsibly.
+
+## Interface conventions
+
+The featured row appears directly below the page title. A compact status line underneath reports the saved row count and run timestamp, with model version and run ID in expandable details. It does not report live generator progress. Loading UI describes fetching saved data. Method explanations appear once per group; the original explanation and rationale strings remain available in expandable notes, deduplicated within each group. Row totals and even/odd counts are calculated directly from each row. A shared responsible-play disclaimer appears in the footer.
+
+
+The expandable distribution panel reads immutable snapshots from `prediction_run_analyses` (one row per run) and `prediction_number_statistics` (36 rows per run). It displays the saved observed and expected frequencies, deviations, standardized deviations, reference intervals, source, date range, cutoff, exclusions, backtest status, seed and generation parameters. Exact field types are defined in `src/types/index.ts`. Both tables need anonymous SELECT access with RLS configured for the published data.
+
+Both the homepage and historical run pages fetch the snapshot by the displayed run ID. Incomplete or inconsistent snapshots are withheld with an explicit message; older runs without snapshots remain readable. Query failures have a separate unavailable message. The panel never fills missing analysis with newer draws or a live 52-draw sample. The draw-history page continues to use its own latest-52 sample.
+
+The reader checks the 7/36 game format, all 36 unique numbers, count totals, expected values, derived deviations, consistent intervals, run identity and chronological data boundaries. These are consistency checks, not an independent recomputation of the stored interval quantiles. Individual reference intervals are descriptive and are not a multiple-comparison-adjusted significance test or a forecast. Stored `selection_details` exposes the actual sampler, weights, smoothing and interval allocation under each strategy’s expandable calculation principle.
+
+## Profile-based ranking
+
+New runs may store `distribution_score`, `profile_probability` and `score_details` on each prediction, plus `ranking_version`, `ranking_definition` and `ranking_parameters` on the run analysis. `distribution_profile_v1` scores the joint even-count, three interval counts and sum profile by `100 * profile_combination_count / max_profile_combination_count` over all 8,347,680 possible rows. This describes profile-category frequency, not the chance of a particular row winning.
+
+The frontend validates version, run identity, all ten unique rows and ranks, score formulas, profile values derived from the actual row, artifact identity, descending order, and the numeric lexicographic tie-breaker. It does not independently enumerate or verify the theoretical cache's counts. Validated runs display a global rank-ordered grid, scores out of 100, per-row score details and an explanation. Legacy runs have display numbers without scores or a “best pick” claim. Unavailable or inconsistent ranking data is not presented as a verified score.
 
 ## Simulator
 

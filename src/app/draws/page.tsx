@@ -70,7 +70,7 @@ export default async function DrawsPage() {
             </p>
             <div className="flex flex-wrap gap-2">
               {top7.map((n) => (
-                <LottoBall key={n} number={n} size="md" animate />
+                <LottoBall key={n} number={n} size="md" />
               ))}
             </div>
           </div>

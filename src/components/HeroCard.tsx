@@ -1,94 +1,29 @@
 import type { Prediction } from '@/types'
+import { numberStats, predictionLabel, strategyInfo } from '@/lib/presentation'
 import LottoBall from './LottoBall'
+import ProfileScore, { scoreLabel } from './ProfileScore'
 
-interface Props {
-  prediction: Prediction
-}
-
-export default function HeroCard({ prediction }: Props) {
-  const text = prediction.explanation ?? prediction.rationale ?? null
-
+export default function HeroCard({ prediction, isRanked = false }: { prediction: Prediction; isRanked?: boolean }) {
+  const stats = numberStats(prediction.numbers)
   return (
-    <div
-      className="hero-card-animate relative overflow-hidden rounded-2xl p-6 sm:p-8"
-      style={{
-        background: 'linear-gradient(135deg, #1a1040 0%, #0f0f1a 40%, #1a0f30 100%)',
-        border: '1px solid #4a3080',
-        boxShadow: '0 0 60px rgba(108,63,197,0.3), 0 20px 40px rgba(0,0,0,0.5)',
-      }}
-    >
-      {/* Glow orbs */}
-      <div
-        aria-hidden
-        className="absolute -top-12 -right-12 w-48 h-48 rounded-full opacity-20 pointer-events-none"
-        style={{ background: 'radial-gradient(circle, #6c3fc5, transparent)' }}
-      />
-      <div
-        aria-hidden
-        className="absolute -bottom-8 -left-8 w-36 h-36 rounded-full opacity-15 pointer-events-none"
-        style={{ background: 'radial-gradient(circle, #f5c518, transparent)' }}
-      />
-
-      {/* Badge */}
-      <div className="flex items-center gap-2 mb-4">
-        <span
-          className="text-xs font-black px-3 py-1 rounded-full tracking-wider uppercase"
-          style={{
-            background: 'linear-gradient(90deg, #f5c518, #d4a812)',
-            color: '#0d0d14',
-            boxShadow: '0 2px 12px rgba(245,197,24,0.4)',
-          }}
-        >
-          Bedste Bud 🏆
-        </span>
-        <span
-          className="text-xs px-2 py-1 rounded-full"
-          style={{ background: 'rgba(108,63,197,0.3)', color: '#b39ddb', border: '1px solid #6c3fc5' }}
-        >
-          Rank #1
-        </span>
-      </div>
-
-      {/* Label */}
-      <h2
-        className="text-2xl sm:text-3xl font-black mb-1 shimmer-text"
-      >
-        {prediction.label}
-      </h2>
-
-      {/* Numbers */}
-      <div className="flex flex-wrap gap-3 mt-5 mb-5">
-        {[...prediction.numbers].sort((a, b) => a - b).map((n, i) => (
-          <LottoBall
-            key={n}
-            number={n}
-            size="lg"
-            animate={i % 2 === 0}
-          />
-        ))}
-      </div>
-
-      {/* Explanation */}
-      {text && (
-        <p
-          className="text-sm leading-relaxed mt-3 max-w-lg"
-          style={{ color: '#b0a0cc' }}
-        >
-          {text}
-        </p>
-      )}
-
-      {/* Strategy chip */}
-      {prediction.strategy_type && (
-        <div className="mt-4">
-          <span
-            className="text-xs px-3 py-1 rounded-full"
-            style={{ background: 'rgba(245,197,24,0.1)', color: '#f5c518', border: '1px solid rgba(245,197,24,0.3)' }}
-          >
-            Strategi: {prediction.strategy_type.replace(/_/g, ' ')}
-          </span>
+    <article className="hero-panel reveal">
+      <div className="relative">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <span className="best-pick-badge">{isRanked ? 'Bedste bud' : 'Fremhævet række'}</span>
+          <span className="rank-badge rank-featured">{isRanked ? 'Rank' : 'Visning'} #{prediction.rank}</span>
         </div>
-      )}
-    </div>
+        <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">{predictionLabel(prediction)}</h2>
+        <p className="muted text-sm mt-2">{isRanked ? 'Højeste fordelingsscore blandt de 10 forslag.' : `${strategyInfo(prediction).label} · Første forslag i kørslens visningsrækkefølge.`}</p>
+        <div className="number-row hero-numbers" aria-label="Rækkens tal">
+          {[...prediction.numbers].sort((a, b) => a - b).map(n => <LottoBall key={n} number={n} size="lg" />)}
+        </div>
+        <div className="hero-stats mono">
+          {isRanked && <span className="featured-score"><small>FORDELINGSSCORE</small><span className="score-value">{scoreLabel(prediction.distribution_score!)} <em>/ 100</em></span></span>}
+          <span><small>SUM</small>{stats.sum}</span>
+          <span><small>LIGE / ULIGE</small>{stats.even} / {stats.odd}</span>
+        </div>
+        {isRanked && <ProfileScore prediction={prediction} />}
+      </div>
+    </article>
   )
 }
