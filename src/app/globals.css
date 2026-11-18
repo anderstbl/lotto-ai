@@ -519,3 +519,32 @@ a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outli
 .sim-leaderboard td:nth-child(3) { color: var(--gold); font-weight: 700; }
 .sim-leaderboard .is-your-score { background: #ffd65c12; }
 @media (max-width: 400px) { .sim-leaderboard { font-size: .65rem; } .sim-leaderboard th, .sim-leaderboard td { padding: .7rem .25rem; } }
+
+/* Two clear entry paths: the manual game leads; computer details live elsewhere. */
+.sim-paths { display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.25rem; }
+.sim-path { display: flex; flex-direction: column; padding: clamp(1.25rem, 3vw, 2rem); border: 1px solid var(--border); border-radius: 1rem; }
+.sim-path-manual { background: radial-gradient(ellipse at 0 0, #6e4f2045, transparent 80%), #1d1b18; border-color: #b39847; box-shadow: 0 8px 40px #ffd65c0a; }
+.sim-path-computer { background: #131c25; border-color: #354755; }
+.sim-path-icon { display: block; font-size: 2.2rem; margin: 1rem 0 .8rem; }
+.sim-path h2 { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 900; letter-spacing: -.035em; line-height: 1.2; }
+.sim-path > p:not(.sim-eyebrow) { color: #b5b6bf; font-size: .9rem; line-height: 1.8; margin-top: 1rem; }
+.sim-path-button { margin-top: 1.5rem; min-height: 52px; font-size: 1rem; }
+.sim-path-manual .sim-path-button { box-shadow: 0 5px 25px #ffd65c25; }
+.sim-path-facts { display: flex; flex-wrap: wrap; gap: .4rem .75rem; margin-top: .8rem; color: #c0bdae; font-size: .65rem; }
+.sim-path-facts span + span::before { content: '·'; margin-right: .5rem; color: #796c55; }
+.sim-path .sim-highscore { margin-top: 1.3rem; font-size: .75rem; }
+.sim-path .sim-score-rules { margin-bottom: 0; }
+.sim-path .sim-reset { margin-top: 1rem; text-align: left; }
+.sim-path > .sim-path-note { font-size: .75rem !important; margin-top: auto !important; padding-top: 1.5rem; color: #99a9b1 !important; }
+.sim-computer-workspace { display: flex; flex-direction: column; gap: 1.25rem; }
+.sim-computer-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.sim-computer-heading h2 { font-size: 1.8rem; font-weight: 900; margin-top: .5rem; }
+.sim-computer-heading > button { flex-shrink: 0; }
+.sim-computer-controls { display: grid; grid-template-columns: 1.3fr 1fr; align-items: center; gap: 1rem 1.5rem; }
+@media (max-width: 767px) {
+  .sim-paths { grid-template-columns: 1fr; }
+  .sim-computer-heading { flex-direction: column; }
+  .sim-computer-controls { grid-template-columns: 1fr; }
+  .sim-winning-intro .sim-row { gap: .35rem; }
+  .sim-winning-intro .lotto-ball { width: 28px; height: 28px; }
+}
