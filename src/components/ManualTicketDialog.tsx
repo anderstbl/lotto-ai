@@ -2,11 +2,14 @@
 
 import { useEffect, useRef, useState } from 'react'
 import LottoBall from '@/components/LottoBall'
+import { manualScore, type ManualHighscore } from '@/lib/manual-score'
 import { ROWS_PER_TICKET, TICKET_PRICE, type Simulation } from '@/lib/lotto-simulator'
 
 interface Props {
   round: Simulation | null
   winningNumbers: readonly number[]
+  manualAttempts: number
+  highscore: ManualHighscore | null
   onComplete: () => void
   onStart: () => void
   onRetry: () => void
@@ -16,7 +19,7 @@ interface Props {
 
 const money = new Intl.NumberFormat('da-DK', { style: 'currency', currency: 'DKK', maximumFractionDigits: 0 })
 
-export default function ManualTicketDialog({ round, winningNumbers, onComplete, onStart, onRetry, onClose, onCashOut }: Props) {
+export default function ManualTicketDialog({ round, winningNumbers, manualAttempts, highscore, onComplete, onStart, onRetry, onClose, onCashOut }: Props) {
   const dialog = useRef<HTMLDialogElement>(null)
   const [revealed, setRevealed] = useState(0)
   const complete = revealed === ROWS_PER_TICKET
@@ -52,11 +55,12 @@ export default function ManualTicketDialog({ round, winningNumbers, onComplete, 
         <p className="sim-eyebrow">PRØV SELV{round ? ` · KUPON NR. ${(round.attempts / ROWS_PER_TICKET).toLocaleString('da-DK')}` : ' · 10 RÆKKER'}</p>
         <h2 id="manual-dialog-title">{!round ? 'Klar til at prøve lykken?' : complete ? best >= 6 ? `🎉 ${best} rigtige!` : 'Din kupon er klar!' : '🎱 Vi trækker dine 10 rækker…'}</h2>
         <p id="manual-dialog-description" className="sim-muted text-sm mt-2">{!round ? 'Tryk Start for at trække 10 rækker til 100 fiktive kroner.' : complete ? 'Din kupon er færdig. Prøv igen eller luk.' : `${revealed} af 10 rækker afsløret…`}</p>
-        {complete && round && <div className="sim-manual-summary" role="status">
-          <h3>Bedste række: <strong>{best} rigtige</strong></h3>
-          <div className="sim-match-summary">{counts.map((count, matches) => count > 0 ? <span key={matches}>{count} {count === 1 ? 'række' : 'rækker'} med {matches} rigtige</span> : null)}</div>
-          <p className="sim-muted text-xs mt-3">Samlet: {(round.attempts / ROWS_PER_TICKET).toLocaleString('da-DK')} {round.attempts === ROWS_PER_TICKET ? 'kupon' : 'kuponer'} · {money.format(round.attempts / ROWS_PER_TICKET * TICKET_PRICE)} i fiktiv indsats.</p>
-        </div>}
+        <div className="sim-manual-summary sim-score-summary" role="status">
+          <h3>Bedste række: <strong>{complete ? `${best} rigtige` : '–'}</strong></h3>
+          <div className="sim-match-summary">{complete ? counts.map((count, matches) => count > 0 ? <span key={matches}>{count} × {matches} rigtige</span> : null) : <span>{round ? 'Kuglerne ruller… resultatet vises her.' : 'Tryk Start for at spille 10 rækker.'}</span>}</div>
+          <p className="sim-manual-points"><span>Point: <strong>{complete ? manualScore(best, manualAttempts).toLocaleString('da-DK') : '–'}</strong></span><span>🏆 Rekord: <strong>{highscore?.points.toLocaleString('da-DK') ?? '–'}</strong></span></p>
+          <p className="sim-muted sim-manual-attempts">{manualAttempts.toLocaleString('da-DK')} {manualAttempts === 1 ? 'manuelt forsøg' : 'manuelle forsøg'}{round ? ` · samlet indsats ${money.format(round.attempts / ROWS_PER_TICKET * TICKET_PRICE)}` : ' · 100 kr. pr. kupon'}</p>
+        </div>
         <div className="sim-reveal-progress" aria-hidden="true"><span style={{ width: `${revealed * 10}%` }} /></div>
       </header>
       <div className="sim-manual-body">
@@ -77,7 +81,7 @@ export default function ManualTicketDialog({ round, winningNumbers, onComplete, 
       <footer className="sim-manual-footer">
         {!round ? <button type="button" className="sim-button sim-primary" autoFocus onClick={onStart}>▶ Start · 100 kr.</button> : <button type="button" className="sim-button sim-primary" disabled={!complete} onClick={onRetry}>↻ Prøv igen · 100 kr.</button>}
         <button type="button" className="sim-button sim-secondary" onClick={onClose}>Luk</button>
-        {complete && best >= 6 && <button type="button" className="sim-button sim-primary sim-manual-cashout" onClick={onCashOut}>🏆 Tag gevinsten hjem</button>}
+        <button type="button" className="sim-button sim-primary sim-manual-cashout" style={{ visibility: complete && best >= 6 ? 'visible' : 'hidden' }} disabled={!complete || best < 6} onClick={onCashOut}>🏆 Tag gevinsten hjem</button>
       </footer>
     </div>
   </dialog>

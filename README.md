@@ -143,3 +143,10 @@ One game at `/simulator` always targets the latest imported winning row up to to
 Jackpot odds are 1 in 8,347,680 (`36 choose 7`). The cumulative chance is `1 - (1 - 1 / 8347680)^attempts`, not a promise of an eventual win. Bonus balls and prize payouts are excluded.
 
 Run simulator checks with `node --experimental-strip-types --test src/lib/lotto-simulator.test.mjs` (Node 22.6+).
+
+
+### Manual highscore
+
+Only completed manual reveals can set the personal highscore, saved under `lottoai.manual-highscore.v1` in this browser's localStorage. The score is `10,000 × best matches on the current ticket + floor(9,999 / sqrt(manual tickets in this game))`; zero matches earn zero. Match tiers do not overlap, so more correct numbers always beat fewer. Equal rounded scores favor fewer attempts. Opening/closing the ready dialog and computer play never add manual attempts. Closing and reopening keeps the manual counter; resetting the game starts a new counter and retains the personal record. Storage failures leave a session-only record, clearly labeled. The permanent summary and fixed dialog/header/footer dimensions keep the popup stationary through ready, drawing, result and retry states.
+
+Scoring checks: `node --experimental-strip-types --test src/lib/manual-score.test.mjs`.

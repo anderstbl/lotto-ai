@@ -472,3 +472,35 @@ a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outli
   .sim-winning-intro { grid-template-columns: 1fr; gap: 1rem; }
   .sim-winning-price { text-align: left; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: .4rem .7rem; border-top: 1px solid #475d62; padding-top: .8rem; }
 }
+
+/* Permanent score slots and fixed dialog height prevent vertical jumping. */
+.sim-manual-layout { height: min(620px, 96dvh); }
+.sim-manual-header { flex-shrink: 0; }
+.sim-manual-header h2 { height: 30px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sim-manual-header .sim-score-summary { height: 106px; box-sizing: border-box; display: grid; grid-template-rows: 20px 28px 16px 15px; gap: 2px; }
+.sim-score-summary .sim-match-summary { margin-top: 0; align-content: start; overflow: hidden; }
+.sim-manual-header .sim-score-summary p { margin: 0; }
+.sim-manual-points { display: flex; justify-content: space-between; gap: .5rem; font-size: .7rem; font-variant-numeric: tabular-nums; }
+.sim-manual-points strong { color: var(--gold); }
+.sim-manual-header .sim-score-summary .sim-manual-attempts { font-size: .6rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sim-manual-footer { grid-template-columns: 1.25fr .65fr 1.1fr; }
+.sim-manual-footer .sim-manual-cashout { grid-column: auto; }
+.sim-highscore { display: grid; grid-template-columns: 1fr auto; gap: .4rem; border: 1px solid #796638; background: #17140c; padding: .8rem; border-radius: .6rem; margin: .8rem 0; font-size: .8rem; }
+.sim-highscore strong { color: var(--gold); font-variant-numeric: tabular-nums; }
+.sim-highscore small { grid-column: 1 / -1; color: var(--text-muted); font-size: .65rem; }
+.sim-score-rules { margin: .7rem 0 1rem; color: var(--text-muted); font-size: .75rem; }
+.sim-score-rules summary { cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.sim-score-rules p { font-size: .75rem; }
+@media (max-width: 767px) {
+  .sim-manual-header h2 { height: 23px; font-size: 1.05rem; }
+  .sim-manual-header .sim-score-summary { height: 99px; padding: .45rem .55rem; grid-template-rows: 18px 26px 16px 14px; }
+  .sim-manual-footer { gap: .3rem; }
+  .sim-manual-footer .sim-button { font-size: .6rem; padding: .6rem .15rem; }
+  .sim-highscore { grid-template-columns: 1fr; }
+}
+.sim-manual-footer { height: 58px; box-sizing: border-box; grid-template-columns: 1fr 1fr; }
+.sim-manual-footer .sim-manual-cashout:disabled { display: none; }
+.sim-manual-footer:has(.sim-manual-cashout:not(:disabled)) { grid-template-columns: 1.25fr .65fr 1.1fr; }
+.sim-score-summary .sim-match-summary { line-height: 1.1; gap: .1rem .5rem; }
+
+.sim-manual-body { flex: 1; }

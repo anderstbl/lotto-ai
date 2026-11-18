@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import LottoBall from '@/components/LottoBall'
 import SimulatorDialog from '@/components/SimulatorDialog'
 import ManualTicketDialog from '@/components/ManualTicketDialog'
+import { MANUAL_SCORE_KEY, manualScore, betterHighscore, readHighscore, type ManualHighscore } from '@/lib/manual-score'
 import {
   createRandomInt, emptySimulation, jackpotChance,
   type Simulation, JACKPOT_ODDS, ROW_PRICE, ROWS_PER_TICKET, TICKET_PRICE, WEEKLY_ROWS, simulateBatch,
@@ -19,6 +20,9 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
   const [running, setRunning] = useState(false)
   const [simulation, setSimulation] = useState(emptySimulation)
   const [cashedOut, setCashedOut] = useState(false)
+  const [manualAttempts, setManualAttempts] = useState(0)
+  const [highscore, setHighscore] = useState<ManualHighscore | null>(null)
+  const [scoreStorageAvailable, setScoreStorageAvailable] = useState(true)
   const [manualOpen, setManualOpen] = useState(false)
   const [manualRound, setManualRound] = useState<Simulation | null>(null)
   const [rolling, setRolling] = useState(false)
@@ -37,7 +41,25 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
     return random.current
   }
 
-  const finishManualAnimation = useCallback(() => setRolling(false), [])
+  useEffect(() => {
+    try { setHighscore(readHighscore(window.localStorage.getItem(MANUAL_SCORE_KEY))) }
+    catch { setScoreStorageAvailable(false) }
+  }, [])
+
+  useEffect(() => {
+    if (!highscore || !scoreStorageAvailable) return
+    try { window.localStorage.setItem(MANUAL_SCORE_KEY, JSON.stringify(highscore)) }
+    catch { setScoreStorageAvailable(false) }
+  }, [highscore, scoreStorageAvailable])
+
+  const finishManualAnimation = useCallback(() => {
+    setRolling(false)
+    if (!manualRound) return
+    const matches = Math.max(...manualRound.latestTicket.map(row => row.matches))
+    if (matches === 0) return
+    const candidate: ManualHighscore = { version: 1, matches, attempts: manualAttempts, points: manualScore(matches, manualAttempts) }
+    setHighscore(previous => betterHighscore(candidate, previous) ? candidate : previous)
+  }, [manualRound, manualAttempts])
 
   function openManualDialog() {
     if (active || !ready) return
@@ -49,6 +71,7 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
     if (rolling || active || cashedOut || selected.length !== 7) return
     const result = simulateBatch({ ...simulation, milestone: null }, selected, ROWS_PER_TICKET, getRandom())
     setSimulation(result)
+    setManualAttempts(attempts => attempts + 1)
     setManualRound(result)
     setRolling(true)
     setRevealId(id => id + 1)
@@ -77,6 +100,7 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
     setRunning(false)
     setCashedOut(false)
     setSimulation(emptySimulation())
+    setManualAttempts(0)
     setRevealId(0)
   }
 
@@ -91,7 +115,7 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
 
   return (
     <div className="simulator flex flex-col gap-6">
-      {manualOpen && <ManualTicketDialog key={manualRound?.attempts ?? 'ready'} round={manualRound} winningNumbers={selected}
+      {manualOpen && <ManualTicketDialog key={manualRound?.attempts ?? 'ready'} round={manualRound} winningNumbers={selected} manualAttempts={manualAttempts} highscore={highscore}
         onComplete={finishManualAnimation} onStart={tryTicket} onRetry={tryTicket} onClose={closeManualRound} onCashOut={cashOut} />}
       <SimulatorDialog prize={cashedOut || manualOpen ? null : simulation.milestone} tickets={tickets} cost={money.format(cost)} automatic={running}
         onContinue={continuePlaying}
@@ -149,6 +173,11 @@ export default function LottoSimulator({ draw }: { draw: { numbers: number[]; dr
               <span className="sim-mode-icon" aria-hidden="true">🎱</span>
               <h3 id="manual-mode">Prøv selv</h3>
               <p>Ét klik, én kupon. Se kuglerne rulle og afslør dine 10 rækker.</p>
+              <div className="sim-highscore" aria-label="Din personlige highscore">
+                <span>🏆 Personlig rekord</span><strong>{highscore ? `${integer.format(highscore.points)} point` : 'Ingen rekord endnu'}</strong>
+                <small>{highscore ? `${highscore.matches} rigtige på ${integer.format(highscore.attempts)} manuelle forsøg · ` : ''}{scoreStorageAvailable ? 'Gemmes i denne browser' : 'Gemmes kun i denne session'}</small>
+              </div>
+              <details className="sim-score-rules"><summary>Sådan får du point</summary><p>Du får 10.000 point pr. rigtigt tal på kuponens bedste række plus en bonus: 9.999 divideret med kvadratroden af antal manuelle forsøg, rundet ned. Flere rigtige slår altid færre; færre forsøg giver større bonus. Computerens forsøg giver ingen point. “Nulstil” starter en ny jagt, men beholder din rekord.</p></details>
               <button type="button" className="sim-button sim-primary w-full" disabled={active || rolling || !ready} onClick={openManualDialog}>🎱 Prøv 10 rækker · 100 kr.</button>
             </section>
           </div>
